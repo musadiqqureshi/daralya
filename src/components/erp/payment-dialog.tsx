@@ -29,6 +29,8 @@ export function PaymentDialog({
   purposes,
   party,
   parties,
+  partyMap,
+  investmentMap,
   investments,
   docs,
   defaultAmount,
@@ -38,6 +40,10 @@ export function PaymentDialog({
   purposes: Purpose[];
   party?: { id: string; label: string };
   parties?: Option[];
+  /** generic entry: party lists per party type, chosen from the purpose */
+  partyMap?: Partial<Record<"customer" | "supplier" | "driver" | "employee" | "investor", Option[]>>;
+  /** investments per investor id (for investor purposes in generic entry) */
+  investmentMap?: Record<string, Option[]>;
   investments?: Option[];
   docs?: PayDoc[];
   defaultAmount?: number;
@@ -75,6 +81,9 @@ export function PaymentDialog({
   const allocTotal = useMemo(() => Object.values(alloc).reduce((s, v) => s + (Number(v) || 0), 0), [alloc]);
   const name = (r: { name_en: string; name_ar: string }) => (locale === "ar" ? r.name_ar : r.name_en);
   const canAuto = purpose === "customer_receipt" || purpose === "supplier_payment";
+  const partyType = purpose.startsWith("customer") ? "customer" : purpose.startsWith("supplier") ? "supplier" : purpose === "driver_commission" ? "driver" : purpose.startsWith("salary") ? "employee" : "investor";
+  const partyOptions = parties ?? partyMap?.[partyType] ?? [];
+  const investmentOptions = investments ?? (partyType === "investor" && partyId ? investmentMap?.[partyId] : undefined);
 
   const submit = () => {
     setError(null);
@@ -130,7 +139,16 @@ export function PaymentDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             {purposes.length > 1 && (
               <Field label={t.cash.purpose} htmlFor="pay-purpose" className="sm:col-span-2">
-                <select id="pay-purpose" className={nativeSelect} value={purpose} onChange={(e) => setPurpose(e.target.value as Purpose)}>
+                <select
+                  id="pay-purpose"
+                  className={nativeSelect}
+                  value={purpose}
+                  onChange={(e) => {
+                    setPurpose(e.target.value as Purpose);
+                    if (!party) setPartyId(null);
+                    setInvestmentId(null);
+                  }}
+                >
                   {purposes.map((p) => (
                     <option key={p} value={p}>
                       {t.purposes[p]}
@@ -145,12 +163,12 @@ export function PaymentDialog({
               </Field>
             ) : (
               <Field label={t.cash.party} className="sm:col-span-2" required>
-                <EntitySelect options={parties ?? []} value={partyId} onChange={setPartyId} />
+                <EntitySelect options={partyOptions} value={partyId} onChange={(v) => { setPartyId(v); setInvestmentId(null); }} />
               </Field>
             )}
-            {investments && (
+            {investmentOptions && (
               <Field label={t.fields.investment} className="sm:col-span-2" required>
-                <EntitySelect options={investments} value={investmentId} onChange={setInvestmentId} />
+                <EntitySelect options={investmentOptions} value={investmentId} onChange={setInvestmentId} />
               </Field>
             )}
             <Field label={t.payments.amount} htmlFor="pay-amount" required>
@@ -234,7 +252,7 @@ export function PaymentDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             {dict.common.cancel}
           </Button>
-          <Button onClick={submit} disabled={pending || !opts || !partyId || !(Number(amount) > 0) || allocTotal > Number(amount || 0)}>
+          <Button onClick={submit} disabled={pending || !opts || !partyId || !(Number(amount) > 0) || allocTotal > Number(amount || 0) || (partyType === "investor" && !investmentId)}>
             {pending && <Loader2 className="animate-spin" />}
             {dict.common.save}
           </Button>

@@ -15,7 +15,7 @@ export type StatementRow = {
   is_opening: boolean;
 };
 
-const sourceHref: Record<string, string> = { sale: "/erp/sales/", purchase: "/erp/purchases/", payment: "/erp/cash/payments/" };
+const sourceHref: Record<string, string> = { sale: "/erp/sales/", purchase: "/erp/purchases/" };
 
 export function StatementTable({ rows }: { rows: StatementRow[] }) {
   const { dict } = useI18n();
