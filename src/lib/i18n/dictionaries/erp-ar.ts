@@ -287,6 +287,7 @@ export const erpAr: ErpDict = {
     low: "منخفض",
     saved: "تم حفظ المنتج",
     empty: "لا توجد منتجات بعد.",
+    sortOrder: "ترتيب الظهور في الموقع",
     printLabel: "طباعة ملصق الباركود",
   },
   purchases: {

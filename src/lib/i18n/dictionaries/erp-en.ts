@@ -285,6 +285,7 @@ export const erpEn = {
     low: "Low",
     saved: "Product saved",
     empty: "No products yet.",
+    sortOrder: "Website sort order",
     printLabel: "Print barcode label",
   },
   purchases: {
