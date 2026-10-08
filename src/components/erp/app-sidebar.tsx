@@ -26,6 +26,9 @@ export function AppSidebar({ perms, badges }: { perms: string[]; badges: Partial
   const pathname = usePathname();
   const { state, setOpenMobile } = useSidebar();
   const groups = visibleNav(perms);
+  // a short menu (e.g. a salesman's) reads better without group headings
+  const compact = groups.reduce((n, g) => n + g.items.length, 0) <= 6;
+  const labelOf = (key: NavKey) => (key === "sales" && !perms.includes("sales.view_all") ? dict.erp.nav.mySales : dict.erp.nav[key]);
   const isActive = (href: string) => (href === "/erp" ? pathname === "/erp" : pathname === href || pathname.startsWith(href + "/"));
 
   return (
@@ -42,21 +45,21 @@ export function AppSidebar({ perms, badges }: { perms: string[]; badges: Partial
       <SidebarContent className="gap-0 pb-4">
         {groups.map((g) => (
           <SidebarGroup key={g.key} className="py-1.5">
-            <SidebarGroupLabel className="text-[0.68rem] font-semibold tracking-[0.14em] text-sidebar-foreground/45 uppercase rtl:tracking-normal rtl:text-xs">
+            <SidebarGroupLabel hidden={compact} className="text-[0.68rem] font-semibold tracking-[0.14em] text-sidebar-foreground/45 uppercase rtl:tracking-normal rtl:text-xs">
               {dict.erp.nav.groups[g.key]}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {g.items.map((item) => {
                   const active = isActive(item.href);
-                  const label = dict.erp.nav[item.key];
+                  const label = labelOf(item.key);
                   return (
                     <SidebarMenuItem key={item.key}>
                       <SidebarMenuButton
                         asChild
                         isActive={active}
                         tooltip={label}
-                        className="h-9 text-[0.9rem] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-cream data-[active=true]:shadow-[inset_3px_0_0_var(--color-gold-500)] rtl:data-[active=true]:shadow-[inset_-3px_0_0_var(--color-gold-500)]"
+                        className="h-10 text-[0.95rem] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-cream data-[active=true]:shadow-[inset_3px_0_0_var(--color-gold-500)] rtl:data-[active=true]:shadow-[inset_-3px_0_0_var(--color-gold-500)]"
                       >
                         <Link href={item.href} onClick={() => setOpenMobile(false)} aria-current={active ? "page" : undefined}>
                           <item.icon className={active ? "text-gold-500" : "text-sidebar-foreground/60"} />

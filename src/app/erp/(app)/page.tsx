@@ -14,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { CapacityBars, RankBars, SeriesChart } from "@/components/erp/charts";
 import { DateRangeFilter } from "@/components/erp/date-range-filter";
 import { EmptyState } from "@/components/erp/empty-state";
@@ -70,7 +71,11 @@ export default async function DashboardPage(props: PageProps<"/erp">) {
   const locale = await getLocale();
   const dict = await getDictionary(locale);
   const t = dict.erp.dashboard;
-  if (!session.can("dashboard.view")) return <NoAccess />;
+  if (!session.can("dashboard.view")) {
+    // salesmen start on the Sell screen
+    if (session.can("sales.create")) redirect("/erp/pos");
+    return <NoAccess />;
+  }
 
   const { from, to } = readRange(await props.searchParams);
   const supabase = await createClient();

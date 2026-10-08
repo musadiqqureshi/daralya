@@ -1,7 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Loader2, RefreshCw, ScanBarcode } from "lucide-react";
+import { AlertTriangle, Loader2, Plus, RefreshCw, ScanBarcode } from "lucide-react";
+import { saveParty } from "@/app/erp/(app)/_actions/parties";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/erp/barcode-scanner";
 import { EntitySelect, type Option } from "@/components/erp/entity-select";
@@ -28,7 +30,7 @@ const blank: Line = { product_id: null, qty: "1", unit_price: "", discount: "" }
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export function SaleEditor({
-  customers,
+  customers: initialCustomers,
   products,
   storages,
   drivers,
@@ -42,6 +44,8 @@ export function SaleEditor({
   canCollect,
   canOverridePrice,
   canDeliver,
+  simple = false,
+  canAddCustomer = false,
 }: {
   customers: (Option & { driver_id: string | null; address: string | null; balance: number; credit_limit: number | null; email: string | null })[];
   products: SaleProduct[];
@@ -57,11 +61,15 @@ export function SaleEditor({
   canCollect: boolean;
   canOverridePrice: boolean;
   canDeliver: boolean;
+  /** salesman mode: big scanner first, only the essentials */
+  simple?: boolean;
+  canAddCustomer?: boolean;
 }) {
   const { dict, locale } = useI18n();
   const t = dict.erp;
   const router = useRouter();
   const name = (r: Named) => (locale === "ar" ? r.name_ar : r.name_en);
+  const [customers, setCustomers] = useState(initialCustomers);
   const initialCustomer = customers.find((c) => c.value === defaultCustomer) ?? null;
   const [customer, setCustomer] = useState<string | null>(initialCustomer?.value ?? null);
   const [storage, setStorage] = useState(storages[0]?.id ?? "");
@@ -158,29 +166,82 @@ export function SaleEditor({
           payment: collect && pay > 0 ? { amount: Math.min(pay, totalSar), method_id: payMethod, money_account_id: payAccount, reference: payRef } : null,
           delivery: deliver ? { scheduled_date: deliveryDate, address, notes: null } : null,
         }),
-      { success: t.sales.posted, onSuccess: (id) => id && router.push(`/erp/sales/${id}`) },
+      { success: t.sales.posted, onSuccess: (id) => id && router.push(simple ? `/erp/pos?last=${id}` : `/erp/sales/${id}`) },
     );
+
+  const scanBox = (big: boolean) => (
+    <div className={big ? "relative flex-1" : "relative"}>
+      <ScanBarcode className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground ${big ? "start-4 size-6" : "start-2.5 size-4"}`} aria-hidden />
+      <Input
+        ref={scanRef}
+        autoFocus={big}
+        value={scan}
+        onChange={(e) => setScan(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (scan.trim()) onCode(scan);
+            setScan("");
+          }
+        }}
+        placeholder={big ? t.pos.scanHere : t.fields.barcode}
+        className={big ? "h-14 border-2 ps-13 text-lg" : "h-8 w-40 ps-8 text-xs"}
+        aria-label={t.fields.barcode}
+      />
+    </div>
+  );
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
       <div className="space-y-6">
+        {simple && (
+          <section className="rounded-2xl border-2 border-gold-500/60 bg-card p-4 shadow-sm sm:p-5">
+            <ol className="mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+              {[t.pos.step1, t.pos.step2, t.pos.step3].map((step, i) => (
+                <li key={step} className="flex items-center gap-2">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-palm-800 text-[0.7rem] font-bold text-cream">{i + 1}</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+            <div className="flex gap-2">
+              {scanBox(true)}
+              <BarcodeScanner onScan={onCode} className="h-14 px-5 text-base" />
+            </div>
+          </section>
+        )}
         <Section>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label={t.fields.customer} required className="sm:col-span-2">
-              <EntitySelect
-                options={customers}
-                value={customer}
-                onChange={(id) => {
-                  setCustomer(id);
-                  const c = customers.find((x) => x.value === id);
-                  if (c?.driver_id) setDriver(c.driver_id);
-                  if (c?.address) setAddress(c.address);
-                }}
-              />
+              <div className="flex gap-2">
+                <EntitySelect
+                  className={simple ? "h-11 text-base" : undefined}
+                  options={customers}
+                  value={customer}
+                  onChange={(id) => {
+                    setCustomer(id);
+                    const c = customers.find((x) => x.value === id);
+                    if (c?.driver_id) setDriver(c.driver_id);
+                    if (c?.address) setAddress(c.address);
+                  }}
+                />
+                {canAddCustomer && (
+                  <QuickCustomer
+                    big={simple}
+                    onCreated={(c) => {
+                      setCustomers((xs) => [...xs, c]);
+                      setCustomer(c.value);
+                      setCustomerEmail("");
+                    }}
+                  />
+                )}
+              </div>
             </Field>
-            <Field label={dict.common.date} htmlFor="sa-date" required>
-              <Input id="sa-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </Field>
+            {!simple && (
+              <Field label={dict.common.date} htmlFor="sa-date" required>
+                <Input id="sa-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              </Field>
+            )}
             <Field label={t.fields.storage} htmlFor="sa-storage" required>
               <select id="sa-storage" className={nativeSelect} value={storage} onChange={(e) => setStorage(e.target.value)}>
                 {storages.map((s) => (
@@ -188,9 +249,11 @@ export function SaleEditor({
                 ))}
               </select>
             </Field>
-            <Field label={t.fields.driver} className="sm:col-span-2">
-              <EntitySelect options={drivers} value={driver} onChange={setDriver} clearable placeholder={dict.common.none} />
-            </Field>
+            {!simple && (
+              <Field label={t.fields.driver} className="sm:col-span-2">
+                <EntitySelect options={drivers} value={driver} onChange={setDriver} clearable placeholder={dict.common.none} />
+              </Field>
+            )}
             <Field label={t.sales.currency} htmlFor="sa-cur">
               <select id="sa-cur" className={nativeSelect} value={currency} onChange={(e) => changeCurrency(e.target.value as Currency)}>
                 {CURRENCIES.map((c) => (
@@ -252,27 +315,12 @@ export function SaleEditor({
         <Section
           title={t.fields.lines}
           actions={
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <ScanBarcode className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                <Input
-                  ref={scanRef}
-                  value={scan}
-                  onChange={(e) => setScan(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      if (scan.trim()) onCode(scan);
-                      setScan("");
-                    }
-                  }}
-                  placeholder={t.fields.barcode}
-                  className="h-8 w-40 ps-8 text-xs"
-                  aria-label={t.fields.barcode}
-                />
+            !simple && (
+              <div className="flex items-center gap-2">
+                {scanBox(false)}
+                <BarcodeScanner onScan={onCode} />
               </div>
-              <BarcodeScanner onScan={onCode} />
-            </div>
+            )
           }
         >
           <LineEditor
@@ -332,7 +380,7 @@ export function SaleEditor({
 
         <Section>
           <div className="grid gap-4 sm:grid-cols-2">
-            {canDeliver && (
+            {canDeliver && !simple && (
               <div className="space-y-3 sm:col-span-2">
                 <label className="flex items-center gap-3 text-sm font-medium">
                   <Switch checked={deliver} onCheckedChange={setDeliver} />
@@ -350,9 +398,11 @@ export function SaleEditor({
                 )}
               </div>
             )}
+{!simple && (
             <Field label={dict.common.notes} htmlFor="sa-notes" className="sm:col-span-2">
               <Textarea id="sa-notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </Field>
+            )}
           </div>
         </Section>
       </div>
@@ -427,5 +477,56 @@ export function SaleEditor({
         </Button>
       </div>
     </div>
+  );
+}
+
+function QuickCustomer({ onCreated, big }: { onCreated: (c: Option & { driver_id: null; address: string | null; balance: number; credit_limit: null; email: string | null }) => void; big?: boolean }) {
+  const { dict } = useI18n();
+  const t = dict.erp.pos;
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const save = async () => {
+    setBusy(true);
+    setErr(null);
+    const res = await saveParty("customer", { name, phone, email });
+    setBusy(false);
+    if (!res.ok || !res.data) return setErr(res.ok ? dict.common.error : res.error);
+    toast.success(t.customerAdded);
+    onCreated({ value: res.data, label: name, sub: phone || undefined, keywords: [phone, email], driver_id: null, address: null, balance: 0, credit_limit: null, email: email || null });
+    setOpen(false);
+    setName("");
+    setPhone("");
+    setEmail("");
+  };
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" className={big ? "h-11 shrink-0" : "shrink-0"}>
+          <Plus />
+          {t.newCustomer}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t.newCustomer}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Field label={dict.common.name} htmlFor="qc-name" required><Input id="qc-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus /></Field>
+          <Field label={dict.common.phone} htmlFor="qc-phone"><Input id="qc-phone" type="tel" dir="ltr" value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
+          <Field label={dict.common.email} htmlFor="qc-email"><Input id="qc-email" type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+          {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
+        </div>
+        <DialogFooter>
+          <Button disabled={busy || name.trim().length < 2} onClick={save}>
+            {busy && <Loader2 className="animate-spin" />}
+            {dict.common.save}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

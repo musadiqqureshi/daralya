@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useI18n } from "@/lib/i18n/client";
 
 /** Camera barcode/QR scanner (ZXing). Hardware scanners work too: they type into the search box. */
-export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
+export function BarcodeScanner({ onScan, className }: { onScan: (code: string) => void; className?: string }) {
   const { dict } = useI18n();
   const t = dict.erp;
   const [open, setOpen] = useState(false);
@@ -48,6 +48,7 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
       <Button
         type="button"
         variant="outline"
+        className={className}
         onClick={() => {
           setErr(null);
           setStarting(true);

@@ -334,7 +334,8 @@ describe("row-level security", () => {
     expect(p.rows.length).toBe(1);
     await expect(db.query("select purchase_price from public.products")).rejects.toThrow(/permission denied/);
     await expect(db.query("select cogs from public.sale_items")).rejects.toThrow(/permission denied/);
-    await expect(rpc(db, "product_costs", [])).rejects.toThrow(/Permission denied/);
+    // salesmen are allowed to see the bought price (owner request); warehouse staff are not
+    expect(((await db.query("select * from public.product_costs()")).rows.length)).toBe(1);
     const lines = await db.query<{ gl_code: string }>("select distinct gl_code from public.journal_lines");
     expect(lines.rows.map((r) => r.gl_code).sort()).toEqual(["1200"]); // only customer lines
     await expect(db.query("insert into public.journal_entries (entry_no, entry_date, source_type) values ('X', current_date, 'hack')"))
@@ -351,6 +352,9 @@ describe("row-level security", () => {
     await expect(db.query("select * from public.sales")).rejects.toThrow(/permission denied/);
     expect((await db.query("select * from public.v_money_balances")).rows.length).toBe(0);
     expect((await db.query("select product_id, qty from public.stock_movements")).rows.length).toBeGreaterThan(0);
+    await expect(rpc(db, "product_costs", [])).rejects.toThrow(/Permission denied/);
+    const ov = await db.query<{ cost_per_kg: string | null }>("select cost_per_kg from public.stock_overview()");
+    expect(ov.rows.every((r) => r.cost_per_kg === null)).toBe(true);
     await actAs(db, owner);
   });
 

@@ -62,3 +62,36 @@ describe("attendance photo retention", () => {
     expect(a).toEqual({ check_in_photo: null, check_out_photo: "old/out.jpg", status: "present" });
   });
 });
+
+describe("salesman view", () => {
+  it("each salesman sees only his own invoices, managers see all", async () => {
+    const a = await createUser(db, "sales", "sellerA");
+    const b = await createUser(db, "sales", "sellerB");
+    const mgr = await createUser(db, "manager", "boss");
+    await actAs(db, a);
+    await rpc(db, "sale_create_fx", [{ customer_id: ids.customer, storage_id: ids.store, lines: [{ product_id: ids.product, qty: 1, unit_price: 50 }] }]);
+    await actAs(db, b);
+    await rpc(db, "sale_create_fx", [{ customer_id: ids.customer, storage_id: ids.store, lines: [{ product_id: ids.product, qty: 2, unit_price: 50 }] }]);
+
+    const count = async (uid: string) => {
+      await actAs(db, uid, "authenticated");
+      const r = await db.query<{ n: number }>("select count(*)::int as n from public.sales");
+      await actAs(db, owner);
+      return r.rows[0].n;
+    };
+    const all = (await one<{ n: number }>(db, "select count(*)::int as n from public.sales")).n;
+    expect(await count(a)).toBe(1);
+    expect(await count(b)).toBe(1);
+    expect(await count(mgr)).toBe(all);
+  });
+
+  it("stock overview gives salesmen the bought price per kg", async () => {
+    const s = await createUser(db, "sales", "sellerC");
+    await actAs(db, s, "authenticated");
+    const r = await one<{ qty: string; cost_per_kg: string; selling_price: string }>(db, "select qty::text, cost_per_kg::text, selling_price::text from public.stock_overview() where sku is not null limit 1");
+    await actAs(db, owner);
+    expect(Number(r.cost_per_kg)).toBe(30);
+    expect(Number(r.selling_price)).toBe(50);
+    expect(Number(r.qty)).toBeGreaterThan(0);
+  });
+});

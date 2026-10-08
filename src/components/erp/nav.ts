@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Package,
   Receipt,
+  ScanBarcode,
   ScanLine,
   ScrollText,
   Settings,
@@ -26,13 +27,20 @@ import {
 } from "lucide-react";
 import type { ErpDict } from "@/lib/i18n/dictionaries/erp-types";
 
-export type NavKey = keyof Omit<ErpDict["nav"], "groups">;
+export type NavKey = keyof Omit<ErpDict["nav"], "groups" | "mySales">;
 export type NavItem = { key: NavKey; href: string; icon: LucideIcon; perms: string[] };
 export type NavGroup = { key: keyof ErpDict["nav"]["groups"]; items: NavItem[] };
 
 /** Sidebar structure. An item shows when the user holds any of its permissions. */
 export const NAV: NavGroup[] = [
-  { key: "overview", items: [{ key: "dashboard", href: "/erp", icon: LayoutDashboard, perms: ["dashboard.view"] }] },
+  {
+    key: "overview",
+    items: [
+      { key: "dashboard", href: "/erp", icon: LayoutDashboard, perms: ["dashboard.view"] },
+      { key: "pos", href: "/erp/pos", icon: ScanBarcode, perms: ["sales.create"] },
+      { key: "stock", href: "/erp/stock", icon: Boxes, perms: ["sales.create", "inventory.view"] },
+    ],
+  },
   {
     key: "trade",
     items: [

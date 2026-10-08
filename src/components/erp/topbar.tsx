@@ -44,6 +44,7 @@ export function Topbar({ perms, user, notices }: { perms: string[]; user: { name
   const segs = pathname.split("/").filter(Boolean); // ["erp", "sales", "new"]
   const mod = ALL_NAV.find((n) => n.href !== "/erp" && pathname.startsWith(n.href));
   const sub = segs[2];
+  const modLabel = (k: (typeof ALL_NAV)[number]["key"]) => (k === "sales" && !perms.includes("sales.view_all") ? t.nav.mySales : t.nav[k]);
   const subLabel = !sub ? null : sub === "new" ? dict.common.new : sub === "mark" ? t.attendance.mark : dict.common.details;
 
   const quickLabels: Record<(typeof QUICK_ACTIONS)[number]["key"], string> = {
@@ -75,10 +76,10 @@ export function Topbar({ perms, user, notices }: { perms: string[]; user: { name
               <BreadcrumbItem>
                 {subLabel ? (
                   <BreadcrumbLink asChild>
-                    <Link href={mod.href}>{t.nav[mod.key]}</Link>
+                    <Link href={mod.href}>{modLabel(mod.key)}</Link>
                   </BreadcrumbLink>
                 ) : (
-                  <BreadcrumbPage>{t.nav[mod.key]}</BreadcrumbPage>
+                  <BreadcrumbPage>{modLabel(mod.key)}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </>

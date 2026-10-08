@@ -21,12 +21,12 @@ export default async function SalesPage(props: PageProps<"/erp/sales">) {
   return (
     <>
       <PageHeader
-        title={dict.erp.sales.title}
+        title={session.can("sales.view_all") ? dict.erp.sales.title : dict.erp.nav.mySales}
         description={dict.erp.sales.subtitle}
         actions={
           session.can("sales.create") && (
             <Button asChild>
-              <Link href="/erp/sales/new">
+              <Link href={session.can("sales.view_all") ? "/erp/sales/new" : "/erp/pos"}>
                 <Plus />
                 {dict.erp.sales.new}
               </Link>

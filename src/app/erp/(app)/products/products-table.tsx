@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, Plus, Star } from "lucide-react";
+import { Barcode as BarcodeIcon, Eye, EyeOff, Plus, Star } from "lucide-react";
 import { DataTable, type Col } from "@/components/erp/data-table";
 import { Money, Num } from "@/components/erp/money";
 import { StatusBadge } from "@/components/erp/status-badge";
@@ -109,14 +109,22 @@ export function ProductsTable({ rows, canManage, showCost, lowOnly }: { rows: Pr
       rowHref={(r) => `/erp/products/${r.id}`}
       emptyTitle={t.products.empty}
       toolbar={
-        canManage && (
-          <Button asChild>
-            <Link href="/erp/products/new">
-              <Plus />
-              {t.products.new}
+        <>
+          <Button asChild variant="outline">
+            <Link href="/print/barcodes" target="_blank">
+              <BarcodeIcon />
+              {t.pos.printBarcodes}
             </Link>
           </Button>
-        )
+          {canManage && (
+            <Button asChild>
+              <Link href="/erp/products/new">
+                <Plus />
+                {t.products.new}
+              </Link>
+            </Button>
+          )}
+        </>
       }
     />
   );
