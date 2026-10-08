@@ -18,8 +18,6 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
     if (!open) return;
     let stop: (() => void) | undefined;
     let cancelled = false;
-    setErr(null);
-    setStarting(true);
     (async () => {
       try {
         const { BrowserMultiFormatReader } = await import("@zxing/browser");
@@ -47,7 +45,15 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => {
+          setErr(null);
+          setStarting(true);
+          setOpen(true);
+        }}
+      >
         <Camera />
         {t.sales.scan}
       </Button>
