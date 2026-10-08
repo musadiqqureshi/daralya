@@ -253,6 +253,13 @@ export const erpEn = {
     printBarcodes: "Print all barcodes",
     copies: "Copies per product",
     showPrice: "Show price on label",
+    setStock: "Set stock",
+    setStockHint: "Enter the quantity actually in this storage. The difference is recorded as an approved adjustment.",
+    currentQty: "Now",
+    newQty: "Counted quantity",
+    costForNew: "Cost per unit for added stock",
+    stockUpdated: "Stock updated",
+    editProduct: "Edit product",
     labels: "Barcode labels",
   },
   customers: {

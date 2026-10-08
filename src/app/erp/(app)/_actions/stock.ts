@@ -77,3 +77,12 @@ export async function logTemperature(input: z.input<typeof tempSchema>): Promise
     return undefined;
   });
 }
+
+const setSchema = z.object({ product_id: uuid, storage_id: uuid, qty: z.coerce.number().min(0).max(10_000_000), unit_cost: z.union([z.coerce.number().min(0), z.literal("")]).optional(), reason: optText(300) });
+/** Admin: set the counted quantity; the difference is posted as an approved adjustment. */
+export async function setStock(input: z.input<typeof setSchema>): Promise<ActionResult<string | null>> {
+  const parsed = setSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues.map((i) => i.message).join("; ") };
+  const v = parsed.data;
+  return callRpc<string | null>("stock_set_quantity", { p_product: v.product_id, p_storage: v.storage_id, p_qty: v.qty, p_unit_cost: v.unit_cost === "" || v.unit_cost === undefined ? null : v.unit_cost, p_reason: v.reason });
+}

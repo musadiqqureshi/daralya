@@ -95,3 +95,22 @@ describe("salesman view", () => {
     expect(Number(r.qty)).toBeGreaterThan(0);
   });
 });
+
+describe("admin set stock", () => {
+  it("sets the counted quantity up and down with audited adjustments", async () => {
+    await actAs(db, owner);
+    const qty = async () => Number((await one<{ q: string }>(db, "select coalesce(sum(qty),0)::text as q from public.stock_movements where product_id = $1 and storage_id = $2", [ids.product, ids.store])).q);
+    await rpc(db, "stock_set_quantity", [ids.product, ids.store, 200, 25, "Physical count"]);
+    expect(await qty()).toBe(200);
+    await rpc(db, "stock_set_quantity", [ids.product, ids.store, 150, null, "Recount"]);
+    expect(await qty()).toBe(150);
+    expect(await rpc(db, "stock_set_quantity", [ids.product, ids.store, 150, null, null])).toBeNull();
+    const adj = await one<{ n: number }>(db, "select count(*)::int as n from public.stock_adjustments where status = 'approved'");
+    expect(adj.n).toBe(2);
+    expect(await trialBalanceDiff(db)).toBe(0);
+    const seller = await createUser(db, "sales", "sellerD");
+    await actAs(db, seller);
+    await expect(rpc(db, "stock_set_quantity", [ids.product, ids.store, 1, null, null])).rejects.toThrow(/Permission denied/);
+    await actAs(db, owner);
+  });
+});

@@ -13,6 +13,7 @@ import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "../product-form";
 import { ProductImages } from "../product-images";
+import { SetStockDialog } from "../../stock/set-stock-dialog";
 
 export default async function ProductPage(props: PageProps<"/erp/products/[id]">) {
   const session = await requireSession();
@@ -32,7 +33,7 @@ export default async function ProductPage(props: PageProps<"/erp/products/[id]">
   const [{ data: images }, { data: avail }, { data: storages }, costs, { data: all }] = await Promise.all([
     supabase.from("product_images").select("id, src").eq("product_id", id).order("sort_order").order("created_at"),
     session.canAny("inventory.view", "sales.create", "purchases.create") ? supabase.rpc("stock_available", { p_product: id }) : Promise.resolve({ data: [] }),
-    supabase.from("storages").select("id, name_en, name_ar"),
+    supabase.from("storages").select("id, name_en, name_ar, is_active"),
     canCost ? supabase.rpc("product_costs") : Promise.resolve({ data: [] }),
     supabase.from("products").select("variety"),
   ]);
@@ -68,7 +69,21 @@ export default async function ProductPage(props: PageProps<"/erp/products/[id]">
         }
       />
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
-        <Section title={t.products.stockByStorage} className="lg:col-span-2">
+        <Section
+          title={t.products.stockByStorage}
+          className="lg:col-span-2"
+          actions={
+            session.can("inventory.adjust_approve") && (
+              <SetStockDialog
+                product={{ id, name }}
+                storages={(storages ?? []).filter((s) => s.is_active).map((s) => ({ id: s.id, name: (locale === "ar" ? s.name_ar : s.name_en) as string }))}
+                byStorage={Object.fromEntries(byStorage)}
+                unit={t.units[p.unit as keyof typeof t.units]}
+                cost={purchase_price ? Number(purchase_price) : null}
+              />
+            )
+          }
+        >
           {byStorage.size ? (
             <div className="space-y-4">
               <ul className="grid gap-3 sm:grid-cols-3">

@@ -255,6 +255,13 @@ export const erpAr: ErpDict = {
     printBarcodes: "طباعة كل الباركودات",
     copies: "عدد النسخ لكل منتج",
     showPrice: "إظهار السعر على الملصق",
+    setStock: "تعديل المخزون",
+    setStockHint: "أدخل الكمية الموجودة فعلاً في هذا المستودع. يُسجَّل الفرق كتسوية معتمدة.",
+    currentQty: "الحالي",
+    newQty: "الكمية المعدودة",
+    costForNew: "تكلفة الوحدة للمخزون المضاف",
+    stockUpdated: "تم تحديث المخزون",
+    editProduct: "تعديل المنتج",
     labels: "ملصقات الباركود",
   },
   customers: {

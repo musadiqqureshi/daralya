@@ -12,7 +12,7 @@ export default async function StockPage() {
   const locale = await getLocale();
   const dict = await getDictionary(locale);
   const supabase = await createClient();
-  const [{ data }, { data: storages }] = await Promise.all([supabase.rpc("stock_overview"), supabase.from("storages").select("id, name_en, name_ar")]);
+  const [{ data }, { data: storages }] = await Promise.all([supabase.rpc("stock_overview"), supabase.from("storages").select("id, name_en, name_ar, is_active")]);
   const sname = new Map((storages ?? []).map((s) => [s.id, locale === "ar" ? s.name_ar : s.name_en]));
   const rows: StockRow[] = ((data ?? []) as Record<string, never>[]).map((r) => {
     const w = Number(r.weight_kg) || 1;
@@ -31,6 +31,7 @@ export default async function StockPage() {
       sell_per_kg: Number(r.selling_price) / w,
       selling_price: Number(r.selling_price),
       min_stock: Number(r.min_stock),
+      by_storage: by,
       storages: Object.keys(by).length > 1 ? Object.entries(by).map(([id, q]) => `${sname.get(id)}: ${fmtNumber(q, locale, 1)}`).join(" · ") : "",
     };
   });
@@ -39,7 +40,14 @@ export default async function StockPage() {
   return (
     <>
       <PageHeader title={dict.erp.pos.stockTitle} description={dict.erp.pos.stockSubtitle} />
-      <StockTable rows={rows} />
+      <StockTable
+        rows={rows}
+        admin={{
+          canSetStock: session.can("inventory.adjust_approve"),
+          canEditProducts: session.can("products.manage"),
+          storages: (storages ?? []).filter((s) => s.is_active).map((s) => ({ id: s.id, name: (locale === "ar" ? s.name_ar : s.name_en) as string })),
+        }}
+      />
     </>
   );
 }

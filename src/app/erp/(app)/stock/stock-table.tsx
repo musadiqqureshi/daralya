@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Barcode as BarcodeIcon } from "lucide-react";
+import { Barcode as BarcodeIcon, Pencil, Plus } from "lucide-react";
+import { SetStockDialog } from "./set-stock-dialog";
 import { DataTable, type Col } from "@/components/erp/data-table";
 import { Money, Num } from "@/components/erp/money";
 import { Button } from "@/components/ui/button";
@@ -22,9 +23,10 @@ export type StockRow = {
   selling_price: number;
   min_stock: number;
   storages: string;
+  by_storage: Record<string, number>;
 };
 
-export function StockTable({ rows }: { rows: StockRow[] }) {
+export function StockTable({ rows, admin }: { rows: StockRow[]; admin?: { canSetStock: boolean; canEditProducts: boolean; storages: { id: string; name: string }[] } }) {
   const { dict } = useI18n();
   const t = dict.erp.pos;
   const showCost = rows.some((r) => r.cost_per_kg !== null);
@@ -77,6 +79,27 @@ export function StockTable({ rows }: { rows: StockRow[] }) {
           },
         ]
       : []),
+    ...(admin && (admin.canSetStock || admin.canEditProducts)
+      ? [
+          {
+            id: "admin",
+            header: "",
+            align: "end" as const,
+            cell: (r: StockRow) => (
+              <div className="flex justify-end gap-1">
+                {admin.canSetStock && (
+                  <SetStockDialog product={{ id: r.product_id, name: r.name }} storages={admin.storages} byStorage={r.by_storage} unit={dict.erp.units[r.unit as "kg"]} cost={r.cost_per_kg !== null ? r.cost_per_kg * r.weight_kg : null} />
+                )}
+                {admin.canEditProducts && (
+                  <Button asChild size="icon-sm" variant="ghost" aria-label={t.editProduct} title={t.editProduct}>
+                    <Link href={`/erp/products/${r.product_id}`}><Pencil /></Link>
+                  </Button>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
   return (
     <DataTable
@@ -84,12 +107,22 @@ export function StockTable({ rows }: { rows: StockRow[] }) {
       columns={cols}
       pageSize={100}
       toolbar={
-        <Button asChild variant="outline">
-          <Link href="/print/barcodes" target="_blank">
-            <BarcodeIcon />
-            {t.printBarcodes}
-          </Link>
-        </Button>
+        <>
+          <Button asChild variant="outline">
+            <Link href="/print/barcodes" target="_blank">
+              <BarcodeIcon />
+              {t.printBarcodes}
+            </Link>
+          </Button>
+          {admin?.canEditProducts && (
+            <Button asChild>
+              <Link href="/erp/products/new">
+                <Plus />
+                {dict.erp.products.new}
+              </Link>
+            </Button>
+          )}
+        </>
       }
     />
   );
