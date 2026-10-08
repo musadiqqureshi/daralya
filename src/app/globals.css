@@ -197,3 +197,14 @@ html[data-locale="ar"] {
   --app-font-sans: var(--font-body-ar), var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --app-font-display: var(--font-display-ar), var(--font-display-en), serif;
 }
+
+@media print {
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"] {
+    display: none !important;
+  }
+  [data-slot="sidebar-inset"] {
+    margin: 0 !important;
+  }
+}
