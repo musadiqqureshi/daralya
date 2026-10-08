@@ -1,3 +1,5 @@
+import { erpEn } from "./erp-en";
+
 export const en = {
   meta: {
     title: "Dar Al-Aaliya Dates — Premium Saudi Dates",
@@ -252,6 +254,7 @@ export const en = {
     warehouse: "Warehouse staff",
     driver: "Driver",
   },
+  erp: erpEn,
 } as const;
 
 type Widen<T> = T extends string ? string : { [K in keyof T]: Widen<T[K]> };

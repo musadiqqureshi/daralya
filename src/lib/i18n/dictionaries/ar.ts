@@ -1,4 +1,5 @@
 import type { Dict } from "./en";
+import { erpAr } from "./erp-ar";
 
 export const ar: Dict = {
   meta: {
@@ -252,4 +253,5 @@ export const ar: Dict = {
     warehouse: "موظف مستودع",
     driver: "سائق",
   },
+  erp: erpAr,
 };
