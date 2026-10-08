@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function Money({ value, className, currency = true, signed = false }: { value: number | string | null | undefined; className?: string; currency?: boolean; signed?: boolean }) {
   const { locale } = useI18n();
-  const n = Number(value ?? 0);
+  const n = Number(value ?? 0) + 0; // + 0 turns -0 into 0
   return (
     <span className={cn("tabular-nums whitespace-nowrap", signed && n < 0 && "text-destructive", className)} dir="ltr">
       {fmtMoney(n, locale, { currency })}

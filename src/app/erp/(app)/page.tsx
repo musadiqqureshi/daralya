@@ -178,7 +178,7 @@ export default async function DashboardPage(props: PageProps<"/erp">) {
               <CapacityBars
                 items={s.inventory_by_storage.map((r) => ({ label: pick(r), kg: Number(r.kg), capacity: r.capacity_kg ? Number(r.capacity_kg) : null }))}
                 unitLabel={dict.common.kg}
-                capLabel={(cap) => tpl(t.capacity, { cap })}
+                capTemplate={t.capacity}
               />
             ) : (
               <EmptyState title={t.noData} className="border-none py-12" />

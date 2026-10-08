@@ -118,7 +118,7 @@ export function RankBars({ items, money = true }: { items: { label: string; valu
 }
 
 /** Capacity meters for storages. */
-export function CapacityBars({ items, unitLabel, capLabel }: { items: { label: string; kg: number; capacity: number | null }[]; unitLabel: string; capLabel: (cap: string) => string }) {
+export function CapacityBars({ items, unitLabel, capTemplate }: { items: { label: string; kg: number; capacity: number | null }[]; unitLabel: string; capTemplate: string }) {
   const f = useFmt();
   return (
     <ul className="space-y-4">
@@ -130,7 +130,7 @@ export function CapacityBars({ items, unitLabel, capLabel }: { items: { label: s
               <span className="font-medium">{s.label}</span>
               <span className="text-muted-foreground tabular-nums">
                 <span className="font-semibold text-foreground">{fmtNumber(s.kg, f.locale, 0)}</span> {unitLabel}
-                {s.capacity ? ` ${capLabel(fmtNumber(s.capacity, f.locale, 0))}` : ""}
+                {s.capacity ? ` ${capTemplate.replace("{cap}", fmtNumber(s.capacity, f.locale, 0))}` : ""}
               </span>
             </div>
             <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-muted">

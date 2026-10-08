@@ -4,7 +4,7 @@ const TZ = "Asia/Riyadh";
 const tag = (l: Locale) => (l === "ar" ? "ar-SA-u-nu-latn" : "en-GB");
 
 export function fmtMoney(value: number | string | null | undefined, locale: Locale, opts: { currency?: boolean } = {}) {
-  const n = Number(value ?? 0);
+  const n = Number(value ?? 0) + 0;
   const s = new Intl.NumberFormat(tag(locale), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
   if (opts.currency === false) return s;
   return locale === "ar" ? `${s} ر.س` : `SAR ${s}`;

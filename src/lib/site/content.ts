@@ -58,7 +58,7 @@ export const defaultContent: SiteContent = {
       ar: "تورّد دار العالية للتمور التمور والمكسرات الفاخرة من العوالي في المدينة المنورة، للمتاجر والضيافة والعائلات — بالكرتون أو بالكيلو.",
     },
     highlights: [
-      { title: { en: "Selected varieties", ar: "أصناف مختارة" }, body: { en: "Ajwa, Sukkari, Safawi, Mabroom, Sugai, Anbar and more.", ar: "عجوة، سكري، صفاوي، مبروم، صقعي، عنبر وغيرها." } },
+      { title: { en: "Selected varieties", ar: "أصناف مختارة" }, body: { en: "Ajwa, Sukari, Safawi, Mabroom, Sugai, Amber and more.", ar: "عجوة، سكري، صفاوي، مبروم، صقعي، عنبر وغيرها." } },
       { title: { en: "Cold storage", ar: "تخزين مبرد" }, body: { en: "Stock is kept in temperature-controlled storage to protect freshness.", ar: "نحفظ المخزون في مستودعات مبردة للحفاظ على الطزاجة." } },
       { title: { en: "Wholesale & retail", ar: "جملة ومفرق" }, body: { en: "Supply for shops, hotels, events and households.", ar: "توريد للمتاجر والفنادق والمناسبات والمنازل." } },
     ],
