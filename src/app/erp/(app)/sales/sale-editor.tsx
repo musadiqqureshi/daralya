@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Loader2, ScanBarcode } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, ScanBarcode } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/erp/barcode-scanner";
 import { EntitySelect, type Option } from "@/components/erp/entity-select";
@@ -18,7 +18,8 @@ import { useI18n } from "@/lib/i18n/client";
 import { tpl } from "@/lib/i18n/dictionaries/en";
 import { fmtNumber, todayRiyadh } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
-import { createSale } from "./actions";
+import { CURRENCIES, CURRENCY_INFO, fmtCurrency, type Currency } from "@/lib/erp/currency";
+import { createSale, refreshRatesAction } from "./actions";
 
 export type SaleProduct = Option & { barcode: string | null; sku: string; unit: string; weight_kg: number; price: number };
 type Named = { id: string; name_en: string; name_ar: string };
@@ -35,12 +36,14 @@ export function SaleEditor({
   methods,
   stock,
   vat,
+  rates: initialRates,
+  ratesAt: initialRatesAt,
   defaultCustomer,
   canCollect,
   canOverridePrice,
   canDeliver,
 }: {
-  customers: (Option & { driver_id: string | null; address: string | null; balance: number; credit_limit: number | null })[];
+  customers: (Option & { driver_id: string | null; address: string | null; balance: number; credit_limit: number | null; email: string | null })[];
   products: SaleProduct[];
   storages: Named[];
   drivers: (Option & { commission: string })[];
@@ -48,6 +51,8 @@ export function SaleEditor({
   methods: (Named & { requires_verification: boolean })[];
   stock: Record<string, Record<string, number>>;
   vat: { enabled: boolean; rate: number };
+  rates: Partial<Record<Currency, number>>;
+  ratesAt: string | null;
   defaultCustomer?: string;
   canCollect: boolean;
   canOverridePrice: boolean;
@@ -74,10 +79,24 @@ export function SaleEditor({
   const [deliveryDate, setDeliveryDate] = useState(todayRiyadh());
   const [address, setAddress] = useState(initialCustomer?.address ?? "");
   const [scan, setScan] = useState("");
+  const [currency, setCurrency] = useState<Currency>("SAR");
+  const [rates, setRates] = useState(initialRates);
+  const [ratesAt, setRatesAt] = useState(initialRatesAt);
+  const [refreshing, setRefreshing] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState("");
   const scanRef = useRef<HTMLInputElement>(null);
   const { run, pending, error } = useServerAction();
 
   const productById = useMemo(() => new Map(products.map((p) => [p.value, p])), [products]);
+  const rate = currency === "SAR" ? 1 : rates[currency] ?? 0;
+  const r2c = (sar: number) => (rate ? Math.round((sar / rate) * 100) / 100 : 0);
+  const changeCurrency = (next: Currency) => {
+    const nextRate = next === "SAR" ? 1 : rates[next] ?? 0;
+    if (!nextRate) return;
+    // keep the agreed prices' value when switching currency
+    setLines((ls) => ls.map((l) => (l.unit_price === "" ? l : { ...l, unit_price: String(Math.round(((Number(l.unit_price) * rate) / nextRate) * 100) / 100) })));
+    setCurrency(next);
+  };
   const cust = customers.find((c) => c.value === customer);
   const avail = (pid: string | null) => (pid ? stock[pid]?.[storage] ?? 0 : 0);
   const lineTotal = (l: Line) => r2((Number(l.qty) || 0) * (Number(l.unit_price) || 0)) - (Number(l.discount) || 0);
@@ -85,9 +104,13 @@ export function SaleEditor({
   const taxable = Math.max(subtotal - (Number(discount) || 0), 0);
   const vatAmt = vat.enabled ? r2((taxable * vat.rate) / 100) : 0;
   const total = r2(taxable + vatAmt);
+  // mirror the database conversion exactly: each price/discount converted and rounded, then totals
+  const subtotalSar = lines.reduce((s, l) => s + r2((Number(l.qty) || 0) * r2((Number(l.unit_price) || 0) * rate)) - r2((Number(l.discount) || 0) * rate), 0);
+  const taxableSar = Math.max(subtotalSar - r2((Number(discount) || 0) * rate), 0);
+  const totalSar = r2(taxableSar + (vat.enabled ? r2((taxableSar * vat.rate) / 100) : 0));
   const kg = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (productById.get(l.product_id ?? "")?.weight_kg ?? 0), 0);
-  const pay = payAmount === null ? total : Number(payAmount) || 0;
-  const overCredit = cust?.credit_limit != null && cust.balance + total - (collect ? pay : 0) > cust.credit_limit;
+  const pay = payAmount === null ? totalSar : Number(payAmount) || 0;
+  const overCredit = cust?.credit_limit != null && cust.balance + totalSar - (collect ? pay : 0) > cust.credit_limit;
 
   const setLine = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
 
@@ -97,11 +120,12 @@ export function SaleEditor({
         const existing = ls.findIndex((l) => l.product_id === p.value);
         if (existing >= 0) return ls.map((l, j) => (j === existing ? { ...l, qty: String((Number(l.qty) || 0) + 1) } : l));
         const empty = ls.findIndex((l) => !l.product_id);
-        const line = { ...blank, product_id: p.value, unit_price: String(p.price) };
+        const line = { ...blank, product_id: p.value, unit_price: String(r2c(p.price)) };
         return empty >= 0 ? ls.map((l, j) => (j === empty ? line : l)) : [...ls, line];
       });
     },
-    [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rate],
   );
 
   const onCode = useCallback(
@@ -116,20 +140,22 @@ export function SaleEditor({
     [products, addProduct, dict.common.noResults],
   );
 
-  const valid = customer && storage && lines.every((l) => l.product_id && Number(l.qty) > 0 && l.unit_price !== "");
+  const valid = customer && storage && rate > 0 && lines.every((l) => l.product_id && Number(l.qty) > 0 && l.unit_price !== "");
 
   const submit = () =>
     run(
       () =>
         createSale({
           customer_id: customer!,
+          currency,
+          customer_email: cust && !cust.email ? customerEmail : "",
           storage_id: storage,
           driver_id: driver,
           date,
           notes,
           discount_amount: discount || 0,
           lines: lines.map((l) => ({ product_id: l.product_id!, qty: l.qty, unit_price: l.unit_price, discount_amount: l.discount || 0 })),
-          payment: collect && pay > 0 ? { amount: Math.min(pay, total), method_id: payMethod, money_account_id: payAccount, reference: payRef } : null,
+          payment: collect && pay > 0 ? { amount: Math.min(pay, totalSar), method_id: payMethod, money_account_id: payAccount, reference: payRef } : null,
           delivery: deliver ? { scheduled_date: deliveryDate, address, notes: null } : null,
         }),
       { success: t.sales.posted, onSuccess: (id) => id && router.push(`/erp/sales/${id}`) },
@@ -165,6 +191,47 @@ export function SaleEditor({
             <Field label={t.fields.driver} className="sm:col-span-2">
               <EntitySelect options={drivers} value={driver} onChange={setDriver} clearable placeholder={dict.common.none} />
             </Field>
+            <Field label={t.sales.currency} htmlFor="sa-cur">
+              <select id="sa-cur" className={nativeSelect} value={currency} onChange={(e) => changeCurrency(e.target.value as Currency)}>
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c} disabled={c !== "SAR" && !rates[c]}>
+                    {c} · {CURRENCY_INFO[c][locale]}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <div className="flex items-end gap-2 text-sm">
+              {currency !== "SAR" && (
+                <p className="pb-2">
+                  <span className="text-muted-foreground">{t.sales.rate}: </span>
+                  <span className="font-semibold tabular-nums" dir="ltr">1 {currency} = {rate.toFixed(4)} SAR</span>
+                </p>
+              )}
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                className="mb-1"
+                disabled={refreshing}
+                aria-label={t.sales.refreshRates}
+                title={ratesAt ? `${t.sales.refreshRates} · ${new Date(ratesAt).toLocaleTimeString()}` : t.sales.refreshRates}
+                onClick={async () => {
+                  setRefreshing(true);
+                  const r = await refreshRatesAction();
+                  setRates(r.rates);
+                  setRatesAt(r.fetchedAt);
+                  setRefreshing(false);
+                  toast.success(t.sales.ratesUpdated);
+                }}
+              >
+                <RefreshCw className={refreshing ? "animate-spin" : ""} />
+              </Button>
+            </div>
+            {cust && !cust.email && (
+              <Field label={t.sales.customerEmail} htmlFor="sa-email" className="sm:col-span-2">
+                <Input id="sa-email" type="email" dir="ltr" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="name@example.com" />
+              </Field>
+            )}
             {cust && (
               <div className="flex items-end gap-4 text-sm sm:col-span-2">
                 <p>
@@ -216,15 +283,15 @@ export function SaleEditor({
             headers={[
               { label: t.fields.product, className: "min-w-56" },
               { label: dict.common.qty, className: "w-28" },
-              { label: dict.common.unitPrice, className: "w-32" },
-              { label: dict.common.discount, className: "w-28" },
-              { label: dict.common.total, className: "w-28 text-end" },
+              { label: `${dict.common.unitPrice} (${currency})`, className: "w-32" },
+              { label: `${dict.common.discount} (${currency})`, className: "w-28" },
+              { label: `${dict.common.total} (${currency})`, className: "w-28 text-end" },
             ]}
             renderCells={(l, i) => {
               const p = l.product_id ? productById.get(l.product_id) : null;
               const a = avail(l.product_id);
               const short = p && Number(l.qty) > a;
-              const below = p && Number(l.unit_price) < p.price;
+              const below = p && Number(l.unit_price) * rate < p.price - 0.005;
               return [
                 <div key="p">
                   <EntitySelect
@@ -232,7 +299,7 @@ export function SaleEditor({
                     value={l.product_id}
                     onChange={(id) => {
                       const np = id ? productById.get(id) : null;
-                      setLine(i, { product_id: id, unit_price: np ? String(np.price) : "" });
+                      setLine(i, { product_id: id, unit_price: np ? String(r2c(np.price)) : "" });
                     }}
                   />
                   {p && (
@@ -293,13 +360,22 @@ export function SaleEditor({
       <div className="space-y-6 xl:sticky xl:top-20 xl:self-start">
         <Section title={dict.common.total}>
           <dl className="space-y-2 text-sm">
-            <div className="flex justify-between"><dt className="text-muted-foreground">{dict.common.subtotal}</dt><dd><Money value={subtotal} /></dd></div>
+            <div className="flex justify-between"><dt className="text-muted-foreground">{dict.common.subtotal}</dt><dd className="tabular-nums" dir="ltr">{currency === "SAR" ? <Money value={subtotal} /> : fmtCurrency(subtotal, currency, locale)}</dd></div>
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">{t.sales.invoiceDiscount}</dt>
               <dd><Input type="number" min="0" step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} className="h-8 w-28 text-end tabular-nums" aria-label={t.sales.invoiceDiscount} /></dd>
             </div>
             {vat.enabled && <div className="flex justify-between"><dt className="text-muted-foreground">{dict.common.vat} ({vat.rate}%)</dt><dd><Money value={vatAmt} /></dd></div>}
-            <div className="flex justify-between border-t pt-2 text-lg font-semibold"><dt>{dict.common.total}</dt><dd><Money value={total} /></dd></div>
+            <div className="flex justify-between border-t pt-2 text-lg font-semibold">
+              <dt>{dict.common.total}</dt>
+              <dd className="tabular-nums" dir="ltr">{currency === "SAR" ? <Money value={total} /> : fmtCurrency(total, currency, locale)}</dd>
+            </div>
+            {currency !== "SAR" && (
+              <div className="flex justify-between rounded-lg bg-palm-50 px-2 py-1.5 font-semibold text-palm-800">
+                <dt>{t.sales.sarEquivalent}</dt>
+                <dd><Money value={totalSar} /></dd>
+              </div>
+            )}
             <div className="flex justify-between text-xs text-muted-foreground"><dt>{t.fields.kgTotal}</dt><dd className="tabular-nums">{fmtNumber(kg, locale, 2)} {dict.common.kg}</dd></div>
           </dl>
         </Section>
@@ -311,8 +387,8 @@ export function SaleEditor({
             </label>
             {collect ? (
               <div className="mt-4 space-y-3">
-                <Field label={dict.common.amount} htmlFor="sa-pay">
-                  <Input id="sa-pay" type="number" min="0" step="0.01" max={total} value={payAmount ?? String(total)} onChange={(e) => setPayAmount(e.target.value)} className="tabular-nums" />
+                <Field label={`${dict.common.amount} (SAR)`} htmlFor="sa-pay">
+                  <Input id="sa-pay" type="number" min="0" step="0.01" max={totalSar} value={payAmount ?? String(totalSar)} onChange={(e) => setPayAmount(e.target.value)} className="tabular-nums" />
                 </Field>
                 <Field label={t.fields.method} htmlFor="sa-pm">
                   <select id="sa-pm" className={nativeSelect} value={payMethod} onChange={(e) => setPayMethod(e.target.value)}>

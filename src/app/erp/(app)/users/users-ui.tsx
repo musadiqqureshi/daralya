@@ -43,14 +43,15 @@ export function NewUserDialog({ drivers, employees }: { drivers: Option[]; emplo
   const [open, setOpen] = useState(false);
   const [v, setV] = useState<{ full_name: string; email: string; role: Role; phone: string; driver_id: string | null; employee_id: string | null }>({ full_name: "", email: "", role: "sales", phone: "", driver_id: null, employee_id: null });
   const [password, setPassword] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
   const { run, pending, error } = useServerAction();
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setPassword(null); }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setPassword(null); setDone(false); } }}>
       <DialogTrigger asChild><Button><Plus />{t.new}</Button></DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>{t.new}</DialogTitle></DialogHeader>
-        {password ? (
-          <PasswordReveal password={password} />
+        {done ? (
+          password ? <PasswordReveal password={password} /> : <p className="rounded-lg bg-palm-50 px-3 py-3 text-sm text-palm-800">{t.emailedCredentials}: <b dir="ltr">{v.email}</b></p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={dict.common.name} htmlFor="us-n" required><Input id="us-n" value={v.full_name} onChange={(e) => setV({ ...v, full_name: e.target.value })} /></Field>
@@ -65,10 +66,10 @@ export function NewUserDialog({ drivers, employees }: { drivers: Option[]; emplo
         )}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <DialogFooter>
-          {password ? (
+          {done ? (
             <Button onClick={() => setOpen(false)}>{dict.common.close}</Button>
           ) : (
-            <Button disabled={pending || v.full_name.length < 2 || !v.email} onClick={() => run(() => createUser(v), { success: t.created, onSuccess: (d) => d && setPassword(d.password) })}>
+            <Button disabled={pending || v.full_name.length < 2 || !v.email} onClick={() => run(() => createUser(v), { onSuccess: (d) => { setDone(true); setPassword(d?.password ?? null); } })}>
               {pending && <Loader2 className="animate-spin" />}
               {dict.common.create}
             </Button>
@@ -109,7 +110,7 @@ function EditUserSheet({ user, perms, drivers, employees, roleDefaults }: { user
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <div className="flex flex-wrap gap-2">
             <Button disabled={pending} onClick={() => run(() => updateUser(user.id, v), { success: dict.common.saved })}>{pending && <Loader2 className="animate-spin" />}{dict.common.saveChanges}</Button>
-            <Button variant="outline" disabled={pending} onClick={() => run(() => resetPassword(user.id), { success: t.passwordReset, onSuccess: (d) => d && setPassword(d.password) })}><KeyRound />{t.resetPassword}</Button>
+            <Button variant="outline" disabled={pending} onClick={() => run(() => resetPassword(user.id), { onSuccess: (d) => setPassword(d?.password ?? null) })}><KeyRound />{t.resetPassword}</Button>
           </div>
           {password && <PasswordReveal password={password} />}
 

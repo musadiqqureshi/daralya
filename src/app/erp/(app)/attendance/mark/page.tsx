@@ -1,6 +1,9 @@
 import { NoAccess } from "@/components/erp/no-access";
 import { PageHeader } from "@/components/erp/page-header";
+import { after } from "next/server";
 import { requireSession } from "@/lib/auth";
+import { purgeAttendancePhotos } from "@/lib/erp/mailers";
+import { hasAdminKey } from "@/lib/supabase/admin";
 import { getEmployees, getSettings } from "@/lib/erp/lookups";
 import { todayRiyadh } from "@/lib/i18n/format";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
@@ -10,6 +13,8 @@ import { AttendanceCamera, type CamEmployee } from "./attendance-camera";
 export default async function MarkAttendancePage() {
   const session = await requireSession();
   if (!session.can("attendance.mark")) return <NoAccess />;
+  // drop photos older than the retention window (24 h) after the response is sent
+  if (hasAdminKey()) after(() => purgeAttendancePhotos().then(() => undefined));
   const locale = await getLocale();
   const dict = await getDictionary(locale);
   const supabase = await createClient();

@@ -27,7 +27,10 @@ const settingsSchema = z
     invoice_footer_ar: t(300),
     invoice_show_zatca_qr: z.boolean(),
     attendance_grace_minutes: z.coerce.number().int().min(0).max(180),
-    attendance_photo_retention_days: z.coerce.number().int().min(7).max(3650),
+    attendance_photo_retention_hours: z.coerce.number().int().min(1).max(8760),
+    email_invoices: z.boolean(),
+    daily_report_enabled: z.boolean(),
+    daily_report_emails: z.string().trim().max(500).nullable().optional().transform((v) => (v ? v : null)),
     attendance_notice_en: t(600),
     attendance_notice_ar: t(600),
     payroll_working_days_per_month: z.coerce.number().int().min(1).max(31),
@@ -112,4 +115,13 @@ export async function saveSchedule(input: z.input<typeof scheduleSchema>): Promi
     else must(await supabase.from("work_schedules").insert(row));
     return undefined;
   });
+}
+
+export async function sendDailyReportNow(): Promise<ActionResult<number>> {
+  const { getSession } = await import("@/lib/auth");
+  const { mailDailyReport } = await import("@/lib/erp/mailers");
+  const session = await getSession();
+  if (!session?.can("settings.manage")) return { ok: false, error: "Permission denied" };
+  const res = await mailDailyReport(undefined, session.email ? [session.email] : []);
+  return res.ok ? { ok: true, data: res.recipients } : { ok: false, error: res.error ?? "Email failed" };
 }

@@ -2,6 +2,7 @@ import { NoAccess } from "@/components/erp/no-access";
 import { PageHeader } from "@/components/erp/page-header";
 import { requireSession } from "@/lib/auth";
 import { getCustomers, getDrivers, getMoneyAccounts, getPaymentMethods, getProducts, getSettings, getStorages } from "@/lib/erp/lookups";
+import { getRates } from "@/lib/erp/fx";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { SaleEditor } from "../sale-editor";
@@ -14,7 +15,7 @@ export default async function NewSalePage(props: PageProps<"/erp/sales/new">) {
   const dict = await getDictionary(locale);
   const t = dict.erp;
   const supabase = await createClient();
-  const [customers, products, storages, drivers, accounts, methods, settings, { data: levels }, { data: balances }] = await Promise.all([
+  const [customers, products, storages, drivers, accounts, methods, settings, { data: levels }, { data: balances }, fx] = await Promise.all([
     getCustomers(),
     getProducts(),
     getStorages(),
@@ -24,6 +25,7 @@ export default async function NewSalePage(props: PageProps<"/erp/sales/new">) {
     getSettings(),
     supabase.from("v_stock_levels").select("product_id, storage_id, qty"),
     supabase.from("v_party_balances").select("party_id, balance").eq("party_type", "customer").eq("gl_code", "1200"),
+    getRates(),
   ]);
   const stock: Record<string, Record<string, number>> = {};
   for (const l of levels ?? []) {
@@ -46,6 +48,7 @@ export default async function NewSalePage(props: PageProps<"/erp/sales/new">) {
           address: c.address,
           balance: bal.get(c.id) ?? 0,
           credit_limit: c.credit_limit === null ? null : Number(c.credit_limit),
+          email: c.email,
         }))}
         products={products.map((p) => ({
           value: p.id,
@@ -64,6 +67,8 @@ export default async function NewSalePage(props: PageProps<"/erp/sales/new">) {
         methods={methods}
         stock={stock}
         vat={{ enabled: Boolean(settings?.vat_enabled), rate: Number(settings?.vat_rate ?? 15) }}
+        rates={fx.rates}
+        ratesAt={fx.fetchedAt}
         defaultCustomer={typeof sp.customer === "string" ? sp.customer : walkIn?.id}
         canCollect={session.canAny("payments.create", "sales.collect") && accounts.length > 0}
         canOverridePrice={session.can("sales.price_override")}

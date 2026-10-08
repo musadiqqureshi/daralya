@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 /** Option lists for forms. RLS decides what each user can see. */
 
-export type CustomerOpt = { id: string; code: string; name: string; name_ar: string | null; phone: string | null; address: string | null; driver_id: string | null; credit_limit: number | null };
+export type CustomerOpt = { id: string; code: string; name: string; name_ar: string | null; phone: string | null; email: string | null; address: string | null; driver_id: string | null; credit_limit: number | null };
 export type ProductOpt = {
   id: string;
   sku: string;
@@ -22,7 +22,7 @@ export type NamedOpt = { id: string; name_en: string; name_ar: string };
 
 export const getCustomers = cache(async () => {
   const supabase = await createClient();
-  const { data } = await supabase.from("customers").select("id, code, name, name_ar, phone, address, driver_id, credit_limit").eq("is_active", true).order("name");
+  const { data } = await supabase.from("customers").select("id, code, name, name_ar, phone, email, address, driver_id, credit_limit").eq("is_active", true).order("name");
   return (data ?? []) as CustomerOpt[];
 });
 

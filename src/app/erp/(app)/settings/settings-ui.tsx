@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Loader2, Plus, Save, Trash2 } from "lucide-react";
-import { deleteQr, saveListItem, saveQr, saveSchedule, saveSettings } from "@/app/erp/(app)/_actions/settings";
+import { Loader2, Mail, Plus, Save, Trash2 } from "lucide-react";
+import { deleteQr, saveListItem, saveQr, saveSchedule, saveSettings, sendDailyReportNow } from "@/app/erp/(app)/_actions/settings";
 import { Field, nativeSelect } from "@/components/erp/field";
 import { Section } from "@/components/erp/section";
 import { useServerAction } from "@/components/erp/use-server-action";
@@ -106,11 +106,11 @@ export function AttendanceSettings({ initial }: { initial: S }) {
   const { dict } = useI18n();
   const t = dict.erp.settings;
   return (
-    <SettingsForm initial={initial} keys={["attendance_grace_minutes", "attendance_photo_retention_days", "attendance_notice_en", "attendance_notice_ar"]}>
+    <SettingsForm initial={initial} keys={["attendance_grace_minutes", "attendance_photo_retention_hours", "attendance_notice_en", "attendance_notice_ar"]}>
       {({ text }) => (
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t.grace} htmlFor="s-gr"><Input id="s-gr" type="number" min="0" {...text("attendance_grace_minutes")} /></Field>
-          <Field label={t.retention} htmlFor="s-ret"><Input id="s-ret" type="number" min="7" {...text("attendance_photo_retention_days")} /></Field>
+          <Field label={t.retentionHours} htmlFor="s-ret"><Input id="s-ret" type="number" min="1" {...text("attendance_photo_retention_hours")} /></Field>
           <Field label={`${t.notice} (EN)`} htmlFor="s-ne"><Textarea id="s-ne" rows={3} {...text("attendance_notice_en")} /></Field>
           <Field label={`${t.notice} (AR)`} htmlFor="s-na"><Textarea id="s-na" dir="rtl" rows={3} {...text("attendance_notice_ar")} /></Field>
         </div>
@@ -263,5 +263,29 @@ export function ScheduleEditor({ rows }: { rows: ScheduleRow[] }) {
       </ul>
       {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
     </Section>
+  );
+}
+
+export function EmailSettings({ initial, configured }: { initial: S; configured: boolean }) {
+  const { dict } = useI18n();
+  const t = dict.erp.settings;
+  const { run, pending } = useServerAction();
+  return (
+    <div className="space-y-4">
+      {!configured && <p className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-warning">{t.emailNotConfigured}</p>}
+      <SettingsForm initial={initial} keys={["email_invoices", "daily_report_enabled", "daily_report_emails"]}>
+        {({ text, bool }) => (
+          <div className="space-y-4">
+            <label className="flex items-center gap-3 text-sm"><Switch {...bool("email_invoices")} />{t.emailInvoices}</label>
+            <label className="flex items-center gap-3 text-sm"><Switch {...bool("daily_report_enabled")} />{t.dailyReport}</label>
+            <Field label={t.reportRecipients} htmlFor="s-rr" hint={t.reportRecipientsHint}><Input id="s-rr" dir="ltr" {...text("daily_report_emails")} placeholder="owner@example.com, manager@example.com" /></Field>
+          </div>
+        )}
+      </SettingsForm>
+      <Button variant="outline" disabled={pending || !configured} onClick={() => run(sendDailyReportNow, { success: t.reportSent })}>
+        {pending ? <Loader2 className="animate-spin" /> : <Mail />}
+        {t.sendReportNow}
+      </Button>
+    </div>
   );
 }

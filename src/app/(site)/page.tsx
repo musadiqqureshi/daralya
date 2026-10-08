@@ -12,7 +12,8 @@ import { publicStorageUrl } from "@/lib/supabase/urls";
 export default async function HomePage() {
   const [locale, content, products] = await Promise.all([getLocale(), getSiteContent(), getPublicProducts()]);
   const dict = await getDictionary(locale);
-  const featured = (products.filter((p) => p.is_featured).length ? products.filter((p) => p.is_featured) : products).slice(0, 8);
+  // every published product, featured varieties first
+  const featured = [...products].sort((a, b) => Number(b.is_featured) - Number(a.is_featured) || a.sort_order - b.sort_order);
   const varieties = Array.from(new Set(products.map((p) => p.variety)));
 
   return (

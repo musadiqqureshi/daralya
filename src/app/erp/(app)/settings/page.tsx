@@ -4,7 +4,8 @@ import { UrlTabs } from "@/components/erp/url-tabs";
 import { requireSession } from "@/lib/auth";
 import { getDictionary } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
-import { AttendanceSettings, CompanySettings, InvoiceSettings, ListEditor, PayrollSettings, QrSettings, ScheduleEditor, SecuritySettings, StockSettings, type QrRow, type ScheduleRow } from "./settings-ui";
+import { emailConfigured } from "@/lib/email/send";
+import { AttendanceSettings, EmailSettings, CompanySettings, InvoiceSettings, ListEditor, PayrollSettings, QrSettings, ScheduleEditor, SecuritySettings, StockSettings, type QrRow, type ScheduleRow } from "./settings-ui";
 
 export default async function SettingsPage() {
   const session = await requireSession();
@@ -30,6 +31,7 @@ export default async function SettingsPage() {
           { value: "stock", label: t.stock, content: <StockSettings initial={init} /> },
           { value: "attendance", label: t.attendance, content: <div className="space-y-6"><AttendanceSettings initial={init} /><ScheduleEditor rows={(schedules ?? []) as ScheduleRow[]} /></div> },
           { value: "payroll", label: t.payroll, content: <PayrollSettings initial={init} /> },
+          { value: "email", label: t.email, content: <EmailSettings initial={init} configured={emailConfigured()} /> },
           { value: "lists", label: t.lists, content: <div className="grid gap-6 xl:grid-cols-2"><ListEditor table="payment_methods" title={t.paymentMethods} rows={methods ?? []} /><ListEditor table="expense_categories" title={t.expenseCategories} rows={cats ?? []} /></div> },
           { value: "security", label: t.security, content: <SecuritySettings initial={init} /> },
         ]}

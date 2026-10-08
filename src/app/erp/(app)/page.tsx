@@ -22,6 +22,8 @@ import { PageHeader } from "@/components/erp/page-header";
 import { Section } from "@/components/erp/section";
 import { StatCard } from "@/components/erp/stat-card";
 import { requireSession } from "@/lib/auth";
+import { CURRENCIES, CURRENCY_INFO, fmtCurrency } from "@/lib/erp/currency";
+import { getRates } from "@/lib/erp/fx";
 import { readRange } from "@/lib/erp/range";
 import { tpl } from "@/lib/i18n/dictionaries/en";
 import { fmtMoney, fmtNumber } from "@/lib/i18n/format";
@@ -72,7 +74,20 @@ export default async function DashboardPage(props: PageProps<"/erp">) {
 
   const { from, to } = readRange(await props.searchParams);
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("dashboard_summary", { p_start: from, p_end: to });
+  const [{ data, error }, { data: fxSales }, fx] = await Promise.all([
+    supabase.rpc("dashboard_summary", { p_start: from, p_end: to }),
+    session.can("sales.view") ? supabase.from("sales").select("currency, fx_rate, total, returned_total").eq("status", "posted").gte("sale_date", from).lte("sale_date", to) : Promise.resolve({ data: [] }),
+    getRates(),
+  ]);
+  const byCurrency = new Map<string, { invoices: number; fc: number; sar: number }>();
+  for (const x of (fxSales ?? []) as { currency: string; fx_rate: number; total: number; returned_total: number }[]) {
+    const sar = Number(x.total) - Number(x.returned_total);
+    const c = byCurrency.get(x.currency) ?? { invoices: 0, fc: 0, sar: 0 };
+    c.invoices += 1;
+    c.sar += sar;
+    c.fc += sar / Number(x.fx_rate);
+    byCurrency.set(x.currency, c);
+  }
   const s = (data ?? { financials: false }) as Summary;
   const m = (v: number | undefined) => fmtMoney(v ?? 0, locale);
   const n = (v: number | undefined, d = 0) => fmtNumber(v ?? 0, locale, d);
@@ -195,6 +210,32 @@ export default async function DashboardPage(props: PageProps<"/erp">) {
             />
           </Section>
         )}
+        {byCurrency.size > 0 && (
+          <Section title={t.salesByCurrency}>
+            <ul className="divide-y text-sm">
+              {[...byCurrency.entries()].sort((a, b) => b[1].sar - a[1].sar).map(([cur, v]) => (
+                <li key={cur} className="flex items-center justify-between gap-3 py-2.5">
+                  <span>
+                    <span className="font-semibold">{cur}</span>
+                    <span className="ms-2 text-xs text-muted-foreground">{tpl(t.invoices, { n: v.invoices })}</span>
+                    {cur !== "SAR" && <span className="block text-xs text-muted-foreground" dir="ltr">{fmtCurrency(v.fc, cur, locale)}</span>}
+                  </span>
+                  <span className="font-semibold tabular-nums" dir="ltr">{m(v.sar)}</span>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
+        <Section title={t.liveRates} description={fx.fetchedAt ? `${dict.common.updated}: ${new Date(fx.fetchedAt).toLocaleString(locale === "ar" ? "ar-SA-u-nu-latn" : "en-GB", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" })}` : undefined}>
+          <ul className="grid grid-cols-2 gap-2 text-sm">
+            {CURRENCIES.filter((c) => c !== "SAR").map((c) => (
+              <li key={c} className="rounded-lg border px-3 py-2">
+                <p className="text-xs text-muted-foreground">1 {c} · {CURRENCY_INFO[c][locale]}</p>
+                <p className="font-semibold tabular-nums" dir="ltr">{fx.rates[c] ? `${fx.rates[c]!.toFixed(4)} SAR` : "—"}</p>
+              </li>
+            ))}
+          </ul>
+        </Section>
         {s.low_stock && s.low_stock.length > 0 && (
           <Section title={t.lowStock} actions={<Link href="/erp/inventory?low=1" className="text-xs font-semibold text-palm-700 hover:underline">{dict.common.seeAll}</Link>}>
             <ul className="divide-y">

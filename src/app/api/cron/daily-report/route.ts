@@ -1,15 +1,13 @@
 import { type NextRequest } from "next/server";
-import { purgeAttendancePhotos } from "@/lib/erp/mailers";
+import { mailDailyReport } from "@/lib/erp/mailers";
 import { hasAdminKey } from "@/lib/supabase/admin";
 
-/**
- * Deletes attendance photos 24 hours after capture (Vercel Cron). The same cleanup
- * also runs whenever the attendance screens are opened, so photos drop on time even
- * on plans that only allow daily cron jobs.
- */
+/** End-of-day sales & stock email (Vercel Cron, 23:55 Saudi time). */
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) return new Response("Unauthorized", { status: 401 });
   if (!hasAdminKey()) return new Response("SUPABASE_SECRET_KEY missing", { status: 500 });
-  return Response.json(await purgeAttendancePhotos());
+  const res = await mailDailyReport();
+  if (!res.enabled) return Response.json({ ok: true, skipped: "disabled in settings" });
+  return Response.json(res, { status: res.ok ? 200 : 500 });
 }

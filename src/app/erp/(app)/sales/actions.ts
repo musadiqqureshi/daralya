@@ -2,10 +2,18 @@
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { isoDate, money, optText, qty, uuid } from "@/lib/erp/schemas";
+import { getSession } from "@/lib/auth";
+import { CURRENCIES } from "@/lib/erp/currency";
+import { getRates } from "@/lib/erp/fx";
+import { mailInvoice } from "@/lib/erp/mailers";
 import { callRpc } from "@/lib/erp/server";
+import { getDictionary } from "@/lib/i18n/server";
+import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
   customer_id: uuid,
+  currency: z.enum(CURRENCIES).default("SAR"),
+  customer_email: z.string().trim().toLowerCase().email().max(200).optional().or(z.literal("")),
   storage_id: uuid,
   driver_id: uuid.nullable().optional(),
   date: isoDate,
@@ -17,13 +25,42 @@ const schema = z.object({
 });
 export type SaleInput = z.input<typeof schema>;
 
+/**
+ * Prices and discounts arrive in the chosen currency. The database converts them
+ * to SAR with the stored live rate (refreshed here first) and keeps the original.
+ */
 export async function createSale(input: SaleInput): Promise<ActionResult<string>> {
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
-  const p = parsed.data;
+  const { customer_email, ...p } = parsed.data;
   if (p.payment && !(p.payment.amount > 0)) p.payment = null;
   if (!p.delivery) delete p.delivery;
-  return callRpc<string>("sale_create", { p });
+  if (p.currency !== "SAR") await getRates();
+
+  const supabase = await createClient();
+  // capture a customer email given at the counter (only fills an empty field)
+  if (customer_email) await supabase.from("customers").update({ email: customer_email }).eq("id", p.customer_id).is("email", null);
+
+  const res = await callRpc<string>("sale_create_fx", { p });
+  if (!res.ok || !res.data) return res;
+  const dict = await getDictionary();
+  const session = await getSession();
+  const mail = await mailInvoice(supabase, res.data, { auto: true, sentBy: session?.userId });
+  return { ...res, message: mail.ok ? `${dict.erp.sales.posted} · ${dict.erp.sales.emailed}` : dict.erp.sales.posted };
+}
+
+export async function emailInvoice(id: string, to?: string): Promise<ActionResult> {
+  const session = await getSession();
+  const dict = await getDictionary();
+  if (!session?.can("sales.view")) return { ok: false, error: dict.common.permissionDenied };
+  const target = to?.trim() ? z.string().email().safeParse(to.trim()) : null;
+  if (target && !target.success) return { ok: false, error: dict.common.email };
+  const res = await mailInvoice(await createClient(), id, { sentBy: session.userId, to: target?.data });
+  return res.ok ? { ok: true, message: dict.erp.sales.emailed } : { ok: false, error: res.error ?? dict.common.error };
+}
+
+export async function refreshRatesAction() {
+  return getRates({ force: true });
 }
 
 const returnSchema = z.object({

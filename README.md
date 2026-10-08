@@ -17,6 +17,8 @@ Copy `.env.example` to `.env.local` and fill in values from the Supabase dashboa
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Project Settings → API Keys (publishable) | public |
 | `SUPABASE_SECRET_KEY` | API Keys → secret (`sb_secret_…`) | **server only** |
 | `SUPABASE_DB_URL` | Connect → Session pooler URI (with DB password) | **local tooling only** |
+| `RESEND_API_KEY` | resend.com → API Keys | **server only** |
+| `EMAIL_FROM` | sender on a domain verified in Resend, e.g. `Dar Al-Aaliya Dates <no-reply@daraaliya.com>` | server only |
 | `CRON_SECRET` | any long random string | server only |
 | `NEXT_PUBLIC_SITE_URL` | your domain, e.g. `https://daraaliya.com` | public |
 
@@ -68,10 +70,12 @@ tests/db/               workflow tests on embedded Postgres (PGlite)
 | Area | Notes |
 |---|---|
 | Purchases | Extra transport/loading costs are spread over lines by value → landed cost per **batch**. Optional payment at entry. Returns and cancellation (only while untouched). |
+| Pricing & currency | Salesmen set their own price per invoice (e.g. 12 to one customer, 13 to another). An invoice can be priced in SAR, USD, GBP, EUR, AED, KWD, PKR or INR; the server fetches live rates (open.er-api.com, cached hourly) and the database converts every price to SAR with the stored rate. Books, balances and the dashboard are in SAR; the original currency and rate are kept on the invoice. |
+| Email (Resend) | New staff logins and password resets are emailed to the user. Invoices are emailed automatically to customers with an email (an email can be captured at the counter). A daily sales & stock report goes to owners + extra recipients at 23:55 Saudi time. Every email is recorded in `email_log`. |
 | Sales | FIFO by batch per storage; no negative stock unless the owner allows it. Driver commission (fixed / % / per kg) is posted internally and never printed. Credit limit check. Barcode: hardware scanner or phone camera. |
 | Payments | **Manual only** — cash, bank transfer, deposit, cheque. No gateway or bank API. Transfers/cheques stay *Pending verification* and are not cleared funds until verified. |
 | Cold storage | Transfers move stock between storages in one transaction keeping batch identity; capacity enforced; temperature log with range alerts. |
-| Attendance | Manager selects the employee → live camera (`getUserMedia`) → **Capture & mark attendance** uploads the frame to a private bucket and records attendance with **server time (Asia/Riyadh)**. Late is computed from the schedule + grace. Duplicate check-ins are blocked. Corrections need a reason and are logged. Manual fallback (no photo) needs its own permission and a reason. No face recognition. |
+| Attendance | Manager selects the employee → live camera (`getUserMedia`) → **Capture & mark attendance** uploads the frame to a private bucket and records attendance with **server time (Asia/Riyadh)**. Late is computed from the schedule + grace. **Photos are deleted 24 hours after capture** (configurable in hours); the attendance record stays. Duplicate check-ins are blocked. Corrections need a reason and are logged. Manual fallback (no photo) needs its own permission and a reason. No face recognition. |
 | Payroll | Generated from attendance as a **draft preview** (nothing deducted silently; unrecorded days are shown, advances are only recovered when entered). Approval posts to the ledger; salaries are then paid manually. |
 | Investors | Capital and profit on separate ledgers. Profit allocations are drafts until approved; approved ones are adjusted, never edited. Example from the proposal is covered by a test (100,000 capital, 30 % of 40,000 → 12,000; 5,000 paid → 7,000 owed; capital unchanged). |
 | Website CMS | Every homepage/about/quality/contact/footer/social/SEO text is editable as a draft and published on demand. Product visibility is controlled per product. |
@@ -94,9 +98,10 @@ The database tests cover purchase → stock/batch/landed cost, FIFO sales with c
 
 1. Push this repository to GitHub and import it in Vercel.
 2. Add the environment variables from §1.1 (not `SUPABASE_DB_URL`).
-3. The cron in `vercel.json` runs the attendance-photo retention job daily (needs `CRON_SECRET`).
-4. Point your domain at Vercel and update `NEXT_PUBLIC_SITE_URL` and the Supabase Auth URLs.
-5. Recommended: Supabase **Pro** plan (daily backups, no project pausing). Test a restore before go-live.
+3. `vercel.json` schedules the daily report (20:55 UTC = 23:55 Riyadh) and the photo cleanup (21:00 UTC). Photo cleanup also runs whenever attendance screens are used, so photos drop ~24 h after capture even on the Hobby plan; on Vercel Pro you can change its schedule to hourly (`0 * * * *`).
+4. In Resend, verify your sending domain (DNS records) — until then Resend only delivers to your own account address.
+5. Point your domain at Vercel and update `NEXT_PUBLIC_SITE_URL` and the Supabase Auth URLs.
+6. Recommended: Supabase **Pro** plan (daily backups, no project pausing). Test a restore before go-live.
 
 ---
 

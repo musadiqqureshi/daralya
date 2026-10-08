@@ -3,6 +3,8 @@ import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { isoDate, optText, uuid } from "@/lib/erp/schemas";
 import { callRpc, guarded, must } from "@/lib/erp/server";
+import { after } from "next/server";
+import { purgeAttendancePhotos } from "@/lib/erp/mailers";
 import { createAdminClient, hasAdminKey } from "@/lib/supabase/admin";
 
 const employeeSchema = z.object({
@@ -51,6 +53,7 @@ export async function markAttendance(input: z.input<typeof markSchema>): Promise
   const parsed = markSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues.map((i) => i.message).join("; ") };
   const p = parsed.data;
+  if (hasAdminKey()) after(() => purgeAttendancePhotos().then(() => undefined));
   return callRpc(p.kind === "in" ? "attendance_check_in" : "attendance_check_out", {
     p_employee: p.employee_id,
     p_photo_path: p.photo_path,

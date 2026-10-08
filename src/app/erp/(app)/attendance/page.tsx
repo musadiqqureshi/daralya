@@ -6,7 +6,10 @@ import { PageHeader } from "@/components/erp/page-header";
 import { StatCard } from "@/components/erp/stat-card";
 import { UrlTabs } from "@/components/erp/url-tabs";
 import { Button } from "@/components/ui/button";
+import { after } from "next/server";
 import { requireSession } from "@/lib/auth";
+import { purgeAttendancePhotos } from "@/lib/erp/mailers";
+import { hasAdminKey } from "@/lib/supabase/admin";
 import { getStaffNames } from "@/lib/erp/lookups";
 import { readRange } from "@/lib/erp/range";
 import { addDays, fmtNumber, todayRiyadh } from "@/lib/i18n/format";
@@ -28,6 +31,8 @@ export default async function AttendancePage(props: PageProps<"/erp/attendance">
   const sp = await props.searchParams;
   const { from, to } = readRange(sp, "month");
   const today = todayRiyadh();
+  // drop photos older than the retention window (24 h) after the response is sent
+  if (hasAdminKey()) after(() => purgeAttendancePhotos().then(() => undefined));
   const locale = await getLocale();
   const dict = await getDictionary(locale);
   const t = dict.erp.attendance;

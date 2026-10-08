@@ -1,12 +1,16 @@
 "use client";
 import Link from "next/link";
-import { Ban, HandCoins, MessageCircle, Printer, Receipt } from "lucide-react";
+import { useState } from "react";
+import { Ban, HandCoins, Loader2, Mail, MessageCircle, Printer, Receipt } from "lucide-react";
 import { PaymentDialog, type PayDoc } from "@/components/erp/payment-dialog";
 import { ReasonDialog } from "@/components/erp/reason-dialog";
+import { useServerAction } from "@/components/erp/use-server-action";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/client";
 import { ReturnDialog, type ReturnLine } from "../purchases/return-dialog";
-import { cancelSale, returnSale } from "./actions";
+import { cancelSale, emailInvoice, returnSale } from "./actions";
 
 export function SaleActions({
   id,
@@ -19,6 +23,7 @@ export function SaleActions({
   canReturn,
   canCancel,
   shareText,
+  customerEmail,
 }: {
   id: string;
   customer: { id: string; label: string };
@@ -30,6 +35,7 @@ export function SaleActions({
   canReturn: boolean;
   canCancel: boolean;
   shareText: string;
+  customerEmail: string | null;
 }) {
   const { dict } = useI18n();
   const t = dict.erp;
@@ -53,6 +59,7 @@ export function SaleActions({
           <MessageCircle />
         </a>
       </Button>
+      <EmailInvoice id={id} email={customerEmail} />
       {(canCollect || canRefund) && (doc || canRefund) && (
         <PaymentDialog
           purposes={[...(canCollect && doc ? (["customer_receipt"] as const) : []), ...(canRefund ? (["customer_refund"] as const) : [])]}
@@ -89,5 +96,38 @@ export function SaleActions({
         />
       )}
     </>
+  );
+}
+
+function EmailInvoice({ id, email }: { id: string; email: string | null }) {
+  const { dict } = useI18n();
+  const t = dict.erp.sales;
+  const [open, setOpen] = useState(false);
+  const [to, setTo] = useState(email ?? "");
+  const { run, pending, error } = useServerAction();
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="icon" aria-label={t.emailInvoice} title={t.emailInvoice}>
+          <Mail />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t.emailInvoice}</DialogTitle>
+        </DialogHeader>
+        <label className="space-y-1.5 text-sm">
+          <span className="font-medium">{t.emailTo}</span>
+          <Input type="email" dir="ltr" value={to} onChange={(e) => setTo(e.target.value)} placeholder="name@example.com" />
+        </label>
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        <DialogFooter>
+          <Button disabled={pending || !/.+@.+\..+/.test(to)} onClick={() => run(() => emailInvoice(id, to), { onSuccess: () => setOpen(false) })}>
+            {pending ? <Loader2 className="animate-spin" /> : <Mail />}
+            {t.emailInvoice}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

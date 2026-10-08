@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SaleActions } from "../sale-actions";
 
 const SALE_COLS =
-  "id, invoice_no, sale_date, created_at, customer_id, storage_id, driver_id, subtotal, discount_amount, taxable_amount, vat_rate, vat_amount, total, total_kg, returned_total, paid_total, pending_total, payment_status, status, notes, cancel_reason, customers(id, name, name_ar, phone, whatsapp), storages(name_en, name_ar), drivers(id, name, name_ar)";
+  "id, invoice_no, sale_date, created_at, currency, fx_rate, customer_id, storage_id, driver_id, subtotal, discount_amount, taxable_amount, vat_rate, vat_amount, total, total_kg, returned_total, paid_total, pending_total, payment_status, status, notes, cancel_reason, customers(id, name, name_ar, phone, whatsapp, email), storages(name_en, name_ar), drivers(id, name, name_ar)";
 
 export default async function SalePage(props: PageProps<"/erp/sales/[id]">) {
   const session = await requireSession();
@@ -26,9 +26,9 @@ export default async function SalePage(props: PageProps<"/erp/sales/[id]">) {
   const supabase = await createClient();
   const { data: s } = await supabase.from("sales").select(SALE_COLS).eq("id", id).maybeSingle();
   if (!s) return session.can("sales.view") ? notFound() : <NoAccess />;
-  type Item = { id: string; line_no: number; qty: number; unit_price: number; discount_amount: number; line_total: number; weight_kg: number; returned_qty: number; products: { name_en: string; name_ar: string; unit: string; sku: string } };
+  type Item = { id: string; line_no: number; qty: number; unit_price: number; unit_price_fc: number | null; discount_amount: number; line_total: number; weight_kg: number; returned_qty: number; products: { name_en: string; name_ar: string; unit: string; sku: string } };
   const [{ data: items }, { data: returns }, { data: allocs }, internal, { data: deliveries }] = await Promise.all([
-    supabase.from("sale_items").select("id, line_no, qty, unit_price, discount_amount, line_total, weight_kg, returned_qty, products(name_en, name_ar, unit, sku)").eq("sale_id", id).order("line_no"),
+    supabase.from("sale_items").select("id, line_no, qty, unit_price, unit_price_fc, discount_amount, line_total, weight_kg, returned_qty, products(name_en, name_ar, unit, sku)").eq("sale_id", id).order("line_no"),
     supabase.from("sale_returns").select("id, return_no, return_date, reason, total").eq("sale_id", id).order("created_at"),
     supabase.from("payment_allocations").select("payment_id").eq("doc_type", "sale").eq("doc_id", id),
     session.canAny("products.view_cost", "reports.financial", "commissions.view") ? supabase.rpc("sale_internal", { p_sale: id }) : Promise.resolve({ data: null }),
@@ -39,7 +39,7 @@ export default async function SalePage(props: PageProps<"/erp/sales/[id]">) {
     paymentIds.length && session.canAny("payments.view", "accounts.view")
       ? (await loadPayments(supabase, locale, { partyType: "customer", partyId: s.customer_id })).filter((x) => paymentIds.includes(x.id))
       : [];
-  const c = s.customers as unknown as { id: string; name: string; name_ar: string | null; phone: string | null; whatsapp: string | null };
+  const c = s.customers as unknown as { id: string; name: string; name_ar: string | null; phone: string | null; whatsapp: string | null; email: string | null };
   const nm = (r: { name_en?: string; name_ar?: string | null; name?: string } | null): string => (r ? ((locale === "ar" ? r.name_ar || r.name : r.name_en || r.name) ?? "—") : "—");
   const list = (items ?? []) as unknown as Item[];
   const due = Number(s.total) - Number(s.returned_total) - Number(s.paid_total) - Number(s.pending_total);
@@ -74,6 +74,7 @@ export default async function SalePage(props: PageProps<"/erp/sales/[id]">) {
             canReturn={posted && session.can("sales.create")}
             canCancel={posted && session.can("sales.cancel") && !(returns ?? []).length && !paymentIds.length}
             shareText={shareText}
+            customerEmail={c.email}
           />
         }
       />
@@ -104,7 +105,10 @@ export default async function SalePage(props: PageProps<"/erp/sales/[id]">) {
                         <Num value={i.qty} /> {t.units[i.products.unit as keyof typeof t.units]}
                         {Number(i.returned_qty) > 0 && <p className="text-xs text-destructive">−<Num value={i.returned_qty} /></p>}
                       </td>
-                      <td className="px-4 py-3 text-end"><Money value={i.unit_price} currency={false} /></td>
+                      <td className="px-4 py-3 text-end">
+                        <Money value={i.unit_price} currency={false} />
+                        {s.currency !== "SAR" && i.unit_price_fc !== null && <span className="block text-xs text-muted-foreground" dir="ltr">{s.currency} {Number(i.unit_price_fc).toFixed(2)}</span>}
+                      </td>
                       <td className="px-4 py-3 text-end text-muted-foreground">{Number(i.discount_amount) ? <Money value={i.discount_amount} currency={false} /> : "—"}</td>
                       <td className="px-4 py-3 text-end font-semibold"><Money value={i.line_total} currency={false} /></td>
                     </tr>
@@ -160,6 +164,7 @@ export default async function SalePage(props: PageProps<"/erp/sales/[id]">) {
               items={[
                 { label: t.fields.storage, value: nm(s.storages as unknown as { name_en: string; name_ar: string }) },
                 { label: t.fields.driver, value: s.drivers ? <Link href={`/erp/drivers/${(s.drivers as unknown as { id: string }).id}`} className="hover:underline">{nm(s.drivers as unknown as { name: string; name_ar: string | null })}</Link> : null },
+                ...(s.currency !== "SAR" ? [{ label: t.sales.currency, value: <span dir="ltr">{s.currency} · 1 {s.currency} = {Number(s.fx_rate).toFixed(4)} SAR</span> }] : []),
                 { label: t.fields.kgTotal, value: <><Num value={s.total_kg} digits={2} /> {dict.common.kg}</> },
                 { label: dict.common.notes, value: s.notes },
               ]}

@@ -22,7 +22,7 @@ export default async function InvoicePrint(props: PageProps<"/print/invoice/[id]
   // Only customer-safe columns are read: no cost, profit, commission or investor data.
   const { data: s } = await supabase
     .from("sales")
-    .select("id, invoice_no, sale_date, created_at, subtotal, discount_amount, taxable_amount, vat_rate, vat_amount, total, returned_total, paid_total, pending_total, payment_status, status, notes, customers(name, name_ar, phone, address, city, vat_number)")
+    .select("id, invoice_no, sale_date, created_at, currency, fx_rate, subtotal, discount_amount, taxable_amount, vat_rate, vat_amount, total, returned_total, paid_total, pending_total, payment_status, status, notes, customers(name, name_ar, phone, address, city, vat_number)")
     .eq("id", id)
     .maybeSingle();
   if (!s) notFound();
@@ -185,6 +185,11 @@ export default async function InvoicePrint(props: PageProps<"/print/invoice/[id]
           </dl>
         </div>
 
+        {s.currency !== "SAR" && (
+          <p className="mt-3 text-[#6b6a62]" dir="ltr">
+            Prices agreed in {s.currency} · 1 {s.currency} = {Number(s.fx_rate).toFixed(4)} SAR · السعر متفق عليه بعملة {s.currency}
+          </p>
+        )}
         {s.notes && <p className="mt-4 rounded bg-[#f8f4eb] p-2">{s.notes}</p>}
 
         {/* QR codes & footer */}
