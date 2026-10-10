@@ -74,7 +74,7 @@ function CorrectDialog({ row }: { row: AttRow }) {
           <DialogTitle>{t.correct}</DialogTitle>
           <DialogDescription>{row.name} · <DateText value={row.work_date} /></DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.common.status} htmlFor="co-st" className="sm:col-span-2">
             <select id="co-st" className={nativeSelect} value={status} onChange={(e) => setStatus(e.target.value)}>
               {(["present", "late", "half_day", "absent", "on_leave", "holiday"] as const).map((s) => <option key={s} value={s}>{dict.erp.status[s]}</option>)}
@@ -274,10 +274,10 @@ export function LeavePanel({ leaves, holidays, employees, canManage }: { leaves:
     },
   ];
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
       <div className="space-y-4">
         {canManage && (
-          <div className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-6">
+          <div className="grid grid-cols-1 gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-6">
             <Field label={dict.erp.fields.employee} className="lg:col-span-2"><EntitySelect options={employees} value={emp} onChange={setEmp} /></Field>
             <Field label={dict.common.type} htmlFor="lv-t">
               <select id="lv-t" className={nativeSelect} value={type} onChange={(e) => { const v = e.target.value as typeof type; setType(v); if (v === "unpaid") setPaid(false); }}>

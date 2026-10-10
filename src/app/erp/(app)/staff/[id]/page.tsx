@@ -106,13 +106,13 @@ export default async function EmployeePage(props: PageProps<"/erp/staff/[id]">) 
         }
       />
       {canPay && (
-        <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatCard label={t.fields.basicSalary} value={fmtMoney(e.basic_salary, locale)} hint={t.salaryTypes[e.salary_type as "monthly"]} />
           <StatCard label={t.staff.advances} value={fmtMoney(advances, locale)} tone={advances > 0 ? "warning" : "default"} />
           <StatCard label={t.payroll.net} value={fmtMoney(salaryOwed, locale)} hint={t.fields.outstanding} tone={salaryOwed > 0 ? "brand" : "default"} />
         </div>
       )}
-      <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <UrlTabs
           tabs={[
             { value: "attendance", label: t.staff.attendanceHistory, content: <AttendanceTable rows={rows} canCorrect={session.can("attendance.correct")} showDate /> },

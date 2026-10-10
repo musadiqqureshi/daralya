@@ -36,12 +36,12 @@ export default async function BatchPage(props: PageProps<"/erp/batches/[id]">) {
   return (
     <>
       <PageHeader back={{ href: "/erp/batches", label: t.batches.title }} title={b.batch_no} description={<Link href={`/erp/products/${b.product_id}`} className="hover:underline">{locale === "ar" ? p.name_ar : p.name_en}</Link>} />
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard label={t.batches.initial} value={`${fmtNumber(b.initial_qty, locale, 3)} ${unit}`} />
         <StatCard label={t.movement.sale} value={`${fmtNumber(Math.max(sold, 0), locale, 3)} ${unit}`} />
         <StatCard label={t.batches.remaining} value={`${fmtNumber(remaining, locale, 3)} ${unit}`} tone="brand" />
       </div>
-      <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <Section title={t.batches.timeline}>
           <ol className="relative ms-3 border-s-2 border-border">
             {rows.map((r) => {

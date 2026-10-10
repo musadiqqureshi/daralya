@@ -192,7 +192,7 @@ export function SaleEditor({
   );
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
       <div className="space-y-6">
         {simple && (
           <section className="rounded-2xl border-2 border-gold-500/60 bg-card p-4 shadow-sm sm:p-5">
@@ -211,11 +211,11 @@ export function SaleEditor({
           </section>
         )}
         <Section>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label={t.fields.customer} required className="sm:col-span-2">
               <div className="flex gap-2">
                 <EntitySelect
-                  className={simple ? "h-11 text-base" : undefined}
+                  className={cn("min-w-0 flex-1", simple && "h-11 text-base")}
                   options={customers}
                   value={customer}
                   onChange={(id) => {
@@ -379,7 +379,7 @@ export function SaleEditor({
         </Section>
 
         <Section>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {canDeliver && !simple && (
               <div className="space-y-3 sm:col-span-2">
                 <label className="flex items-center gap-3 text-sm font-medium">
@@ -387,7 +387,7 @@ export function SaleEditor({
                   {t.sales.createDelivery}
                 </label>
                 {deliver && (
-                  <div className="grid gap-3 sm:grid-cols-[12rem_1fr]">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[12rem_1fr]">
                     <Field label={t.sales.deliveryDate} htmlFor="sa-dd">
                       <Input id="sa-dd" type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
                     </Field>

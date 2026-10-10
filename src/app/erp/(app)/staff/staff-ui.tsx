@@ -59,7 +59,7 @@ export function EmployeeForm({
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent side={locale === "ar" ? "left" : "right"} className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader><SheetTitle>{initial ? t.staff.edit : t.staff.new}</SheetTitle></SheetHeader>
-        <div className="grid gap-4 px-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2">
           <div className="flex items-center gap-4 sm:col-span-2">
             <span className="relative size-20 overflow-hidden rounded-2xl bg-palm-50">
               {preview ? <Image src={preview} alt="" fill sizes="80px" className="object-cover" unoptimized /> : <UserRound className="absolute inset-0 m-auto size-8 text-palm-700" />}

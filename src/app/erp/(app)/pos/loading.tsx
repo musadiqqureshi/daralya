@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <div aria-busy="true" className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]">
+    <div aria-busy="true" className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]">
       <div className="space-y-4">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="h-12 rounded-lg" />

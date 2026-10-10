@@ -36,7 +36,7 @@ export function GenerateDialog() {
           <DialogTitle>{t.generate}</DialogTitle>
           <DialogDescription>{t.unrecordedHint}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.common.from} htmlFor="pg-s"><Input id="pg-s" type="date" value={start} onChange={(e) => setStart(e.target.value)} /></Field>
           <Field label={dict.common.to} htmlFor="pg-e"><Input id="pg-e" type="date" value={end} min={start} onChange={(e) => setEnd(e.target.value)} /></Field>
           <Field label={dict.common.notes} htmlFor="pg-n" className="sm:col-span-2"><Input id="pg-n" value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>

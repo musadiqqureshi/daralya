@@ -17,7 +17,7 @@ export default async function LoginPage(props: PageProps<"/erp/login">) {
   const locale = await getLocale();
   const dict = await getDictionary(locale);
   return (
-    <main className="grid min-h-screen bg-cream lg:grid-cols-[1.1fr_1fr]">
+    <main className="grid grid-cols-1 min-h-screen bg-cream lg:grid-cols-[1.1fr_1fr]">
       <section className="relative hidden overflow-hidden bg-palm-900 p-12 text-cream lg:flex lg:flex-col lg:justify-between">
         <div className="pattern-fronds absolute inset-0 opacity-60" aria-hidden />
         <LogoMark className="pointer-events-none absolute -end-24 -bottom-16 h-[26rem] text-gold-500/[0.07]" />

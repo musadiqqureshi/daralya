@@ -113,7 +113,7 @@ export function AdjustmentDialog({ storages, products, canApprove }: { storages:
           <DialogTitle>{t.newAdjustment}</DialogTitle>
           {!canApprove && <DialogDescription>{t.requested}</DialogDescription>}
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Field label={t.adjType} htmlFor="adj-type">
             <select id="adj-type" className={nativeSelect} value={type} onChange={(e) => setType(e.target.value as typeof type)}>
               {(Object.keys(t.types) as (keyof typeof t.types)[]).map((k) => (
@@ -237,7 +237,7 @@ export function OpeningStockForm({ storages, products }: { storages: Named[]; pr
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.openingHint}</p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:max-w-xl">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-xl">
         <Field label={dict.erp.fields.storage} htmlFor="op-st">
           <select id="op-st" className={nativeSelect} value={storage} onChange={(e) => setStorage(e.target.value)}>
             {storages.map((s) => <option key={s.id} value={s.id}>{name(s)}</option>)}
@@ -311,7 +311,7 @@ export function TransferDialog({ storages, products, stock }: { storages: Named[
         <DialogHeader>
           <DialogTitle>{t.transfer}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Field label={dict.erp.fields.fromStorage} htmlFor="tr-from">
             <select id="tr-from" className={nativeSelect} value={from} onChange={(e) => setFrom(e.target.value)}>
               {storages.map((s) => <option key={s.id} value={s.id}>{name(s)}</option>)}
@@ -396,7 +396,7 @@ export function StorageDialog({ initial, trigger }: { initial?: StorageRow; trig
         <DialogHeader>
           <DialogTitle>{initial ? t.edit : t.new}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.erp.products.nameEn} htmlFor="st-en" required><Input id="st-en" value={String(v.name_en ?? "")} onChange={s("name_en")} /></Field>
           <Field label={dict.erp.products.nameAr} htmlFor="st-ar" required><Input id="st-ar" dir="rtl" value={String(v.name_ar ?? "")} onChange={s("name_ar")} /></Field>
           <Field label={dict.erp.fields.location} htmlFor="st-loc" className="sm:col-span-2"><Input id="st-loc" value={String(v.location ?? "")} onChange={s("location")} /></Field>

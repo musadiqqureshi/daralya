@@ -68,7 +68,7 @@ export default async function ProductPage(props: PageProps<"/erp/products/[id]">
           )
         }
       />
-      <div className="mb-6 grid gap-6 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Section
           title={t.products.stockByStorage}
           className="lg:col-span-2"
@@ -86,7 +86,7 @@ export default async function ProductPage(props: PageProps<"/erp/products/[id]">
         >
           {byStorage.size ? (
             <div className="space-y-4">
-              <ul className="grid gap-3 sm:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[...byStorage.entries()].map(([sid, q]) => (
                   <li key={sid} className="rounded-lg border p-3">
                     <p className="text-xs text-muted-foreground">{storageName.get(sid)}</p>

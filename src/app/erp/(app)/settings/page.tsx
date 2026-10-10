@@ -32,7 +32,7 @@ export default async function SettingsPage() {
           { value: "attendance", label: t.attendance, content: <div className="space-y-6"><AttendanceSettings initial={init} /><ScheduleEditor rows={(schedules ?? []) as ScheduleRow[]} /></div> },
           { value: "payroll", label: t.payroll, content: <PayrollSettings initial={init} /> },
           { value: "email", label: t.email, content: <EmailSettings initial={init} configured={emailConfigured()} /> },
-          { value: "lists", label: t.lists, content: <div className="grid gap-6 xl:grid-cols-2"><ListEditor table="payment_methods" title={t.paymentMethods} rows={methods ?? []} /><ListEditor table="expense_categories" title={t.expenseCategories} rows={cats ?? []} /></div> },
+          { value: "lists", label: t.lists, content: <div className="grid grid-cols-1 gap-6 xl:grid-cols-2"><ListEditor table="payment_methods" title={t.paymentMethods} rows={methods ?? []} /><ListEditor table="expense_categories" title={t.expenseCategories} rows={cats ?? []} /></div> },
           { value: "security", label: t.security, content: <SecuritySettings initial={init} /> },
         ]}
       />

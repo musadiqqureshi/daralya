@@ -85,7 +85,7 @@ export default async function InvestorPage(props: PageProps<"/erp/investors/[id]
           </>
         }
       />
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label={t.investors.capitalBalance} value={fmtMoney(totals.cap, locale)} hint={`${t.investors.capitalIn}: ${fmtMoney(totals.cin, locale)} · ${t.investors.capitalReturned}: ${fmtMoney(totals.cret, locale)}`} tone="brand" />
         <StatCard label={t.investors.profitEarned} value={fmtMoney(totals.earned, locale)} />
         <StatCard label={t.investors.profitPaid} value={fmtMoney(totals.paid, locale)} />
@@ -100,7 +100,7 @@ export default async function InvestorPage(props: PageProps<"/erp/investors/[id]
             {(investments ?? []).map((i) => {
               const s = sum.get(i.id);
               return (
-                <li key={i.id} className="grid gap-4 p-5 lg:grid-cols-[1fr_auto]">
+                <li key={i.id} className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-[1fr_auto]">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-palm-900">{invLabel(i)}</p>
@@ -143,7 +143,7 @@ export default async function InvestorPage(props: PageProps<"/erp/investors/[id]
         )}
       </Section>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <UrlTabs
           tabs={[
             { value: "allocations", label: t.investors.allocations, count: allocRows.filter((a) => a.status === "draft").length, content: <AllocationsTable rows={allocRows} canApprove={session.can("investors.approve_profit")} canManage={session.can("investors.manage")} /> },

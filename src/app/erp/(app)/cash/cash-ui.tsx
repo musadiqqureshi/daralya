@@ -20,7 +20,7 @@ export function AccountCards({ rows, canManage }: { rows: AccountRow[]; canManag
   const { dict, locale } = useI18n();
   const t = dict.erp.cash;
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {rows.map((a) => (
         <li key={a.id} className={cn("relative rounded-xl border p-5", a.kind === "cash" ? "bg-card" : "bg-palm-900 text-cream", !a.is_active && "opacity-60")}>
           <div className="flex items-start justify-between gap-2">
@@ -71,7 +71,7 @@ export function AccountDialog({ initial, trigger }: { initial?: AccountRow; trig
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>{initial ? t.editAccount : t.newAccount}</DialogTitle></DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.erp.products.nameEn} htmlFor="ac-en" required><Input id="ac-en" value={String(v.name_en ?? "")} onChange={s("name_en")} /></Field>
           <Field label={dict.erp.products.nameAr} htmlFor="ac-ar" required><Input id="ac-ar" dir="rtl" value={String(v.name_ar ?? "")} onChange={s("name_ar")} /></Field>
           <Field label={dict.common.type} htmlFor="ac-kind">
@@ -149,7 +149,7 @@ export function TransferMoneyDialog({ accounts }: { accounts: Acc[] }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>{t.transfer}</DialogTitle></DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.common.from} htmlFor="mt-from"><select id="mt-from" className={nativeSelect} value={from} onChange={(e) => setFrom(e.target.value)}>{accounts.map((a) => <option key={a.id} value={a.id}>{name(a)}</option>)}</select></Field>
           <Field label={dict.common.to} htmlFor="mt-to"><select id="mt-to" className={nativeSelect} value={to} onChange={(e) => setTo(e.target.value)}>{accounts.map((a) => <option key={a.id} value={a.id} disabled={a.id === from}>{name(a)}</option>)}</select></Field>
           <Field label={dict.common.amount} htmlFor="mt-amt" required><Input id="mt-amt" type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
@@ -190,7 +190,7 @@ export function CashClosingDialog({ accounts }: { accounts: Acc[] }) {
           <DialogTitle>{t.closing}</DialogTitle>
           <DialogDescription>{date === todayRiyadh() ? null : null}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.erp.fields.account} htmlFor="cc-acc"><select id="cc-acc" className={nativeSelect} value={account} onChange={(e) => setAccount(e.target.value)}>{cash.map((a) => <option key={a.id} value={a.id}>{locale === "ar" ? a.name_ar : a.name_en}</option>)}</select></Field>
           <Field label={dict.common.date} htmlFor="cc-date"><Input id="cc-date" type="date" value={date} max={todayRiyadh()} onChange={(e) => setDate(e.target.value)} /></Field>
           <div className="rounded-lg bg-muted/60 p-3 text-sm"><p className="text-muted-foreground">{t.expected}</p><p className="text-lg font-semibold"><Money value={expected} /></p></div>

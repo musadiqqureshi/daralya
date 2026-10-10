@@ -42,7 +42,7 @@ export default async function InvestorsPage() {
   return (
     <>
       <PageHeader title={t.title} description={t.subtitle} actions={session.can("investors.manage") && <NewInvestorButton />} />
-      <div className="mb-6 grid gap-3 sm:grid-cols-2">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <StatCard label={t.capitalBalance} value={fmtMoney(tot.capital, locale)} tone="brand" />
         <StatCard label={t.profitOutstanding} value={fmtMoney(tot.owed, locale)} />
       </div>

@@ -98,12 +98,12 @@ export default async function SupplierPage(props: PageProps<"/erp/suppliers/[id]
           </>
         }
       />
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard label={dict.common.balance} value={fmtMoney(owed, locale)} hint={t.suppliers.balanceHint} tone={owed > 0 ? "brand" : "default"} />
         <StatCard label={t.suppliers.totalPurchased} value={fmtMoney(total, locale)} hint={`${posted.length} ${t.suppliers.purchases}`} />
         <StatCard label={t.fields.paid} value={fmtMoney(posted.reduce((sum, r) => sum + r.paid_total, 0), locale)} />
       </div>
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <UrlTabs
           tabs={[
             { value: "purchases", label: t.suppliers.purchases, count: posted.length, content: <PurchasesTable rows={purchases} showSupplier={false} /> },

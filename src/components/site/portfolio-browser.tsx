@@ -92,7 +92,7 @@ export function PortfolioBrowser({ products }: { products: PublicProduct[] }) {
       </div>
 
       {filtered.length ? (
-        <ul className="mt-6 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className="mt-6 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((p, i) => (
             <li key={p.id}>
               <ProductCardClient product={p} priority={i < 4} />

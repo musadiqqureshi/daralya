@@ -49,7 +49,7 @@ export function CompanySettings({ initial }: { initial: S }) {
   return (
     <SettingsForm initial={initial} keys={keys}>
       {({ text }) => (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label={dict.erp.products.nameEn} htmlFor="s-cn"><Input id="s-cn" {...text("company_name_en")} /></Field>
           <Field label={dict.erp.products.nameAr} htmlFor="s-ca"><Input id="s-ca" dir="rtl" {...text("company_name_ar")} /></Field>
           <Field label={`${dict.erp.settings.tagline} (EN)`} htmlFor="s-te"><Input id="s-te" {...text("tagline_en")} /></Field>
@@ -74,7 +74,7 @@ export function InvoiceSettings({ initial }: { initial: S }) {
   return (
     <SettingsForm initial={initial} keys={["vat_enabled", "vat_rate", "invoice_language", "invoice_footer_en", "invoice_footer_ar", "invoice_show_zatca_qr"]}>
       {({ text, bool, v, setV }) => (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex items-center gap-3 text-sm font-medium"><Switch {...bool("vat_enabled")} />{t.vatEnabled}</label>
           <Field label={t.vatRate} htmlFor="s-vr"><Input id="s-vr" type="number" min="0" max="100" step="0.01" {...text("vat_rate")} disabled={!v.vat_enabled} /></Field>
           <Field label={t.invoiceLanguage} htmlFor="s-il">
@@ -108,7 +108,7 @@ export function AttendanceSettings({ initial }: { initial: S }) {
   return (
     <SettingsForm initial={initial} keys={["attendance_grace_minutes", "attendance_photo_retention_hours", "attendance_notice_en", "attendance_notice_ar"]}>
       {({ text }) => (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label={t.grace} htmlFor="s-gr"><Input id="s-gr" type="number" min="0" {...text("attendance_grace_minutes")} /></Field>
           <Field label={t.retentionHours} htmlFor="s-ret"><Input id="s-ret" type="number" min="1" {...text("attendance_photo_retention_hours")} /></Field>
           <Field label={`${t.notice} (EN)`} htmlFor="s-ne"><Textarea id="s-ne" rows={3} {...text("attendance_notice_en")} /></Field>
@@ -125,7 +125,7 @@ export function PayrollSettings({ initial }: { initial: S }) {
   return (
     <SettingsForm initial={initial} keys={["payroll_working_days_per_month", "payroll_overtime_multiplier", "payroll_late_deduction_mode", "payroll_late_deduction_value", "payroll_absence_deduction", "payroll_half_day_factor", "payroll_paid_leave"]}>
       {({ text, bool, v, setV }) => (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label={t.daysPerMonth} htmlFor="s-dpm"><Input id="s-dpm" type="number" min="1" max="31" {...text("payroll_working_days_per_month")} /></Field>
           <Field label={t.otMultiplier} htmlFor="s-ot"><Input id="s-ot" type="number" min="0" step="0.05" {...text("payroll_overtime_multiplier")} /></Field>
           <Field label={t.lateMode} htmlFor="s-lm">
@@ -169,7 +169,7 @@ export function QrSettings({ rows }: { rows: QrRow[] }) {
     <Section title={t.qr} actions={<Button size="sm" variant="outline" onClick={() => setItems((xs) => [...xs, { ...blank }])}><Plus />{t.addQr}</Button>}>
       <ul className="space-y-3">
         {items.map((q, i) => (
-          <li key={q.id ?? `new-${i}`} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_2fr_auto_auto_auto_auto]">
+          <li key={q.id ?? `new-${i}`} className="grid grid-cols-1 gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_2fr_auto_auto_auto_auto]">
             <Input aria-label={`${t.label} EN`} placeholder={`${t.label} (EN)`} value={q.label_en} onChange={(e) => set(i, { label_en: e.target.value })} />
             <Input aria-label={`${t.label} AR`} placeholder={`${t.label} (AR)`} dir="rtl" value={q.label_ar} onChange={(e) => set(i, { label_ar: e.target.value })} />
             <Input aria-label="URL" dir="ltr" value={q.url} onChange={(e) => set(i, { url: e.target.value })} />
@@ -231,7 +231,7 @@ export function ScheduleEditor({ rows }: { rows: ScheduleRow[] }) {
       <ul className="space-y-3">
         {items.map((s, i) => (
           <li key={s.id ?? `n${i}`} className="space-y-3 rounded-lg border p-3">
-            <div className="grid gap-2 sm:grid-cols-6">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
               <Field label={dict.common.name} className="sm:col-span-2"><Input value={s.name} onChange={(e) => set(i, { name: e.target.value })} /></Field>
               <Field label={t.startTime}><Input type="time" value={s.start_time.slice(0, 5)} onChange={(e) => set(i, { start_time: e.target.value })} /></Field>
               <Field label={t.endTime}><Input type="time" value={s.end_time.slice(0, 5)} onChange={(e) => set(i, { end_time: e.target.value })} /></Field>

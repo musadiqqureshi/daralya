@@ -28,7 +28,7 @@ export function DriverForm({ initial, trigger }: { initial?: DriverInput & { id:
         <SheetHeader>
           <SheetTitle>{initial ? t.drivers.edit : t.drivers.new}</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-4 px-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2">
           <Field label={t.fields.kind} htmlFor="dr-kind">
             <select id="dr-kind" className={nativeSelect} value={v.kind} onChange={s("kind")}>
               <option value="driver">{t.driverKinds.driver}</option>

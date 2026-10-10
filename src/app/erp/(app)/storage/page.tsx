@@ -55,7 +55,7 @@ export default async function StoragePage() {
           </>
         }
       />
-      <ul className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <ul className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {list.map((s) => {
           const load = kg.get(s.id) ?? 0;
           const pct = s.capacity_kg ? Math.min((load / Number(s.capacity_kg)) * 100, 100) : null;

@@ -136,7 +136,7 @@ export function PaymentDialog({
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {purposes.length > 1 && (
               <Field label={t.cash.purpose} htmlFor="pay-purpose" className="sm:col-span-2">
                 <select

@@ -67,7 +67,7 @@ export function ReturnDialog({
             </li>
           ))}
         </ul>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.common.date} htmlFor="ret-date">
             <Input id="ret-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>

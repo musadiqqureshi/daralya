@@ -66,7 +66,7 @@ function NodeEditor({ name, value, onChange, depth = 0 }: { name: string; value:
     return (
       <fieldset className="space-y-1.5">
         <legend className="mb-1 text-[0.82rem] font-medium">{human(name)}</legend>
-        <div className="grid gap-2 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <div>
             <Label className="mb-1 text-[0.7rem] text-muted-foreground">{t.english}</Label>
             <C value={value.en} onChange={(e: React.ChangeEvent<HTMLInputElement & HTMLTextAreaElement>) => onChange({ ...value, en: e.target.value })} rows={long ? 3 : undefined} />
@@ -178,7 +178,7 @@ export function PortfolioManager({ rows, canEdit }: { rows: PortfolioRow[]; canE
   const t = dict.erp.products;
   const { run, pending } = useServerAction();
   return (
-    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {rows.map((p) => (
         <li key={p.id} className={cn("flex items-center gap-3 rounded-xl border bg-card p-3", !p.is_published && "opacity-70")}>
           <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-beige">{p.image && <Image src={publicStorageUrl("products", p.image) ?? ""} alt="" fill sizes="56px" className="object-cover" />}</span>
@@ -209,7 +209,7 @@ export function InquiriesInbox({ rows }: { rows: InquiryRow[] }) {
   const { run, pending } = useServerAction();
   if (!rows.length) return <p className="rounded-xl border border-dashed py-14 text-center text-sm text-muted-foreground">{t.noInquiries}</p>;
   return (
-    <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[22rem_1fr]">
       <ul className="max-h-[70vh] divide-y overflow-y-auto rounded-xl border bg-card">
         {rows.map((r) => (
           <li key={r.id}>

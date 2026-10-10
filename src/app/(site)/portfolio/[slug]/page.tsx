@@ -46,7 +46,7 @@ export default async function ProductPage(props: PageProps<"/portfolio/[slug]">)
           <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
           {t.back}
         </Link>
-        <div className="mt-8 grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-6">
             <ProductGallery
               name={name}
@@ -102,7 +102,7 @@ export default async function ProductPage(props: PageProps<"/portfolio/[slug]">)
         <section className="border-t border-palm-900/8 bg-[#f3eddf] py-20">
           <div className="container-site">
             <h2 className="font-display text-4xl font-semibold text-palm-900">{t.related}</h2>
-            <ul className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-10 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
               {related.map((p) => (
                 <li key={p.id}>
                   <ProductCard product={p} locale={locale} dict={dict} />

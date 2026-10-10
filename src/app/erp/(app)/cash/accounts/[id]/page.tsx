@@ -27,7 +27,7 @@ export default async function AccountPage(props: PageProps<"/erp/cash/accounts/[
   return (
     <>
       <PageHeader back={{ href: "/erp/cash", label: dict.erp.cash.title }} title={locale === "ar" ? a.name_ar : a.name_en} description={dict.erp.cash.kinds[a.kind as "cash"]} actions={<DateRangeFilter from={from} to={to} />} />
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard label={dict.common.balance} value={fmtMoney(a.balance, locale)} tone="brand" />
         <StatCard label={dict.erp.reports.debit} value={fmtMoney(inflow, locale)} />
         <StatCard label={dict.erp.reports.credit} value={fmtMoney(outflow, locale)} />

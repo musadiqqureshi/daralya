@@ -32,7 +32,7 @@ export function InvestorDialog({ initial, trigger }: { initial?: InvestorInput &
           <DialogTitle>{initial ? t.edit : t.new}</DialogTitle>
           <DialogDescription>{t.privacy}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.common.name} htmlFor="iv-n" required><Input id="iv-n" value={v.name} onChange={s("name")} /></Field>
           <Field label={dict.common.nameAr} htmlFor="iv-na"><Input id="iv-na" dir="rtl" value={v.name_ar ?? ""} onChange={s("name_ar")} /></Field>
           <Field label={dict.common.phone} htmlFor="iv-p"><Input id="iv-p" dir="ltr" value={v.phone ?? ""} onChange={s("phone")} /></Field>
@@ -70,7 +70,7 @@ export function InvestmentDialog({ investorId, initial, trigger }: { investorId:
           <DialogTitle>{t.investors.newInvestment}</DialogTitle>
           <DialogDescription>{t.investors.adviser}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={t.fields.model} htmlFor="in-m">
             <select id="in-m" className={nativeSelect} value={v.model} onChange={s("model")} disabled={Boolean(initial)}>
               {(Object.keys(t.models) as (keyof typeof t.models)[]).map((k) => <option key={k} value={k}>{t.models[k]}</option>)}
@@ -143,7 +143,7 @@ export function AllocationDialog({ investment, approved, canSeeBooks }: { invest
             </button>
           ))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={t.periodLabel} htmlFor="al-l" required className="sm:col-span-2"><Input id="al-l" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Q1 2026" /></Field>
           {kind === "allocation" ? (
             <>

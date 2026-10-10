@@ -31,7 +31,7 @@ export default async function ContactPage(props: PageProps<"/contact">) {
   return (
     <>
       <PageHeader eyebrow={t.eyebrow} title={t.title} intro={t.intro} />
-      <section className="container-site grid gap-12 py-20 lg:grid-cols-12 lg:gap-16">
+      <section className="container-site grid grid-cols-1 gap-12 py-20 lg:grid-cols-12 lg:gap-16">
         <aside className="lg:col-span-4">
           <h2 className="font-display text-3xl font-semibold text-palm-900">{t.details}</h2>
           <ul className="mt-6 space-y-3">

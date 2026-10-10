@@ -83,12 +83,12 @@ export default async function DriverPage(props: PageProps<"/erp/drivers/[id]">) 
           </>
         }
       />
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard label={t.drivers.earned} value={fmtMoney(earned, locale)} />
         <StatCard label={t.drivers.paidOut} value={fmtMoney(payments.filter((p) => p.status === "verified").reduce((s, p) => s + p.amount, 0), locale)} />
         <StatCard label={t.drivers.owed} value={fmtMoney(owed, locale)} tone={owed > 0 ? "brand" : "default"} />
       </div>
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <UrlTabs
           tabs={[
             { value: "commissions", label: t.drivers.commissionHistory, content: <CommissionsTable rows={commRows} /> },

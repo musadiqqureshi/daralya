@@ -273,7 +273,7 @@ export function NewDeliveryDialog({ customers, drivers }: { customers: (Option &
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>{t.new}</DialogTitle></DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={dict.erp.fields.customer} required className="sm:col-span-2">
             <EntitySelect options={customers} value={customer} onChange={(v) => { setCustomer(v); setAddress(customers.find((c) => c.value === v)?.address ?? ""); }} />
           </Field>
@@ -311,7 +311,7 @@ export function DeliveriesBoard({ rows, drivers, canManage }: { rows: DeliveryCa
   const today = todayRiyadh();
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {COLUMNS.map((col) => {
           const items = rows.filter((r) => r.status === col);
           return (

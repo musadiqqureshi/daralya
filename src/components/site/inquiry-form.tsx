@@ -36,7 +36,7 @@ export function InquiryForm({
   }
 
   return (
-    <form ref={formRef} action={action} noValidate className="grid gap-5 sm:grid-cols-2">
+    <form ref={formRef} action={action} noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
       <label className="block sm:col-span-1">
         <span className="text-sm font-medium text-palm-900">{t.name}</span>

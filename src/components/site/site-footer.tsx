@@ -22,7 +22,7 @@ export function SiteFooter({ content, dict, locale }: { content: SiteContent; di
   return (
     <footer className="relative overflow-hidden bg-palm-950 text-cream/80">
       <div className="pattern-fronds pointer-events-none absolute inset-0 opacity-40" aria-hidden />
-      <div className="container-site relative grid gap-12 py-16 md:grid-cols-12">
+      <div className="container-site relative grid grid-cols-1 gap-12 py-16 md:grid-cols-12">
         <div className="md:col-span-5">
           <Logo name={dict.common.brandShort} sub={locale === "ar" ? "للتمور" : "Dates"} tone="light" markClassName="h-10" />
           <p className="mt-5 max-w-sm text-[0.95rem] leading-relaxed text-cream/70">{content.footer.blurb[locale]}</p>

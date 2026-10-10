@@ -32,7 +32,7 @@ export function PartyForm({ kind, trigger, initial, drivers }: { kind: "customer
         </SheetHeader>
         <form
           id={`${kind}-form`}
-          className="grid gap-4 px-4 sm:grid-cols-2"
+          className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
             void run(() => saveParty(kind, v as PartyInput), { success: t.created, onSuccess: () => setOpen(false) });

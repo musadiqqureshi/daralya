@@ -19,7 +19,7 @@ export default async function QualityPage() {
     <>
       <PageHeader eyebrow={dict.site.quality.eyebrow} title={q.title[locale]} intro={q.intro[locale]} image={publicStorageUrl("site", q.image)} />
       <section className="container-site py-20 sm:py-28">
-        <ol className="relative grid gap-x-8 gap-y-16 md:grid-cols-2 lg:grid-cols-3">
+        <ol className="relative grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2 lg:grid-cols-3">
           {q.steps.map((s, i) => (
             <Reveal as="li" key={i} delay={(i % 3) * 0.08} className="group">
               <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-beige">

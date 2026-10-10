@@ -51,7 +51,7 @@ export function ProductForm({ initial, canSeeCost, varieties }: { initial?: Part
 
   return (
     <form
-      className="grid gap-6 xl:grid-cols-[1fr_22rem]"
+      className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]"
       onSubmit={(e) => {
         e.preventDefault();
         void run(() => saveProduct({ ...(v as ProductInput), id: initial?.id }), {
@@ -64,7 +64,7 @@ export function ProductForm({ initial, canSeeCost, varieties }: { initial?: Part
     >
       <div className="space-y-6">
         <Section title={t.basics}>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label={t.nameEn} htmlFor="pf-en" required>
               <Input
                 id="pf-en"
@@ -115,7 +115,7 @@ export function ProductForm({ initial, canSeeCost, varieties }: { initial?: Part
         </Section>
 
         <Section title={t.pricing}>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label={f.unit} htmlFor="pf-unit" required>
               <select id="pf-unit" className={nativeSelect} value={v.unit} onChange={(e) => {
                   const unit = e.target.value as ProductInput["unit"];
@@ -149,7 +149,7 @@ export function ProductForm({ initial, canSeeCost, varieties }: { initial?: Part
         </Section>
 
         <Section title={t.website}>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label={t.packagingEn} htmlFor="pf-pack-en">
               <Input id="pf-pack-en" value={v.packaging_en ?? ""} onChange={text("packaging_en")} />
             </Field>

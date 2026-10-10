@@ -80,7 +80,7 @@ export default async function SalePage(props: PageProps<"/erp/sales/[id]">) {
       />
       {!posted && <p className="mb-4 rounded-lg bg-muted px-4 py-3 text-sm">{dict.common.cancelledReason.replace("{reason}", s.cancel_reason ?? "")}</p>}
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
           <Section title={t.fields.lines} bodyClassName="p-0">
             <div className="overflow-x-auto">

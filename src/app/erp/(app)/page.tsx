@@ -118,7 +118,7 @@ export default async function DashboardPage(props: PageProps<"/erp">) {
       {error && <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">{error.message}</p>}
 
       {/* Headline numbers */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {s.total_sales !== undefined && (
           <StatCard tone="brand" icon={Receipt} label={t.totalSales} value={m(s.total_sales)} hint={tpl(t.invoices, { n: s.sales_count ?? 0 })} href="/erp/sales" />
         )}
@@ -147,7 +147,7 @@ export default async function DashboardPage(props: PageProps<"/erp">) {
       </div>
 
       {/* Charts */}
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {s.sales_series && (
           <Section title={s.financials || s.sales_series.some((r) => r.purchases !== null) ? t.purchasesVsSales : t.salesPerformance} className="xl:col-span-2">
             {s.sales_series.some((r) => r.sales || r.purchases) ? (

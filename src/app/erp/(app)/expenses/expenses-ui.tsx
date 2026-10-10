@@ -37,7 +37,7 @@ export function ExpenseDialog({ categories, accounts, methods, defaultOpen = fal
           <DialogTitle>{t.expenses.new}</DialogTitle>
           <DialogDescription>{t.cash.noGateway}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label={t.fields.category} htmlFor="ex-cat" required>
             <select id="ex-cat" className={nativeSelect} value={v.category_id} onChange={s("category_id")}>{categories.map((c) => <option key={c.id} value={c.id}>{name(c)}</option>)}</select>
           </Field>

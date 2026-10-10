@@ -53,7 +53,7 @@ export function NewUserDialog({ drivers, employees }: { drivers: Option[]; emplo
         {done ? (
           password ? <PasswordReveal password={password} /> : <p className="rounded-lg bg-palm-50 px-3 py-3 text-sm text-palm-800">{t.emailedCredentials}: <b dir="ltr">{v.email}</b></p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label={dict.common.name} htmlFor="us-n" required><Input id="us-n" value={v.full_name} onChange={(e) => setV({ ...v, full_name: e.target.value })} /></Field>
             <Field label={dict.common.email} htmlFor="us-e" required><Input id="us-e" type="email" dir="ltr" value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} /></Field>
             <Field label={dict.erp.fields.role} htmlFor="us-r">
@@ -97,7 +97,7 @@ function EditUserSheet({ user, perms, drivers, employees, roleDefaults }: { user
           <SheetDescription dir="ltr" className="text-start">{user.email}</SheetDescription>
         </SheetHeader>
         <div className="space-y-6 px-4 pb-8">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label={dict.common.name} htmlFor="ue-n"><Input id="ue-n" value={v.full_name} onChange={(e) => setV({ ...v, full_name: e.target.value })} /></Field>
             <Field label={dict.erp.fields.role} htmlFor="ue-r">
               <select id="ue-r" className={nativeSelect} value={v.role} disabled={user.isSelf} onChange={(e) => setV({ ...v, role: e.target.value as Role })}>{ROLES.map((r) => <option key={r} value={r}>{dict.roles[r]}</option>)}</select>

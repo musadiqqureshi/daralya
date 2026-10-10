@@ -58,7 +58,7 @@ export default async function ExpensesPage(props: PageProps<"/erp/expenses">) {
         description={t.subtitle}
         actions={session.can("expenses.create") && accounts.length > 0 && <ExpenseDialog categories={categories} accounts={accounts} methods={methods} defaultOpen={sp.new === "1"} />}
       />
-      <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <ExpensesTable rows={rows} canCancel={session.can("finance.adjust")} toolbar={<DateRangeFilter from={from} to={to} />} />
         <div className="space-y-6">
           <StatCard label={dict.common.total} value={fmtMoney(total, locale)} hint={`${posted.length} ${dict.common.rows}`} tone="brand" />

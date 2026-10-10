@@ -24,7 +24,7 @@ export default async function AboutPage() {
   return (
     <>
       <PageHeader eyebrow={dict.site.about.eyebrow} title={a.title[locale]} />
-      <section className="container-site grid gap-14 py-20 sm:py-28 lg:grid-cols-12">
+      <section className="container-site grid grid-cols-1 gap-14 py-20 sm:py-28 lg:grid-cols-12">
         <Reveal className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] lg:col-span-5">
           <Image src={publicStorageUrl("site", a.image) ?? ""} alt={a.imageAlt[locale]} fill sizes="(min-width:1024px) 40vw, 100vw" className="object-cover" />
         </Reveal>
@@ -49,7 +49,7 @@ export default async function AboutPage() {
       </section>
 
       <section className="bg-palm-900 py-20 text-cream sm:py-24">
-        <div className="container-site grid gap-6 md:grid-cols-2">
+        <div className="container-site grid grid-cols-1 gap-6 md:grid-cols-2">
           {[
             { icon: Package, title: dict.site.about.wholesaleTitle, body: a.wholesale[locale] },
             { icon: Snowflake, title: dict.site.about.sourcingTitle, body: a.sourcing[locale] },

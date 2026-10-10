@@ -5,7 +5,7 @@ export function PageHeader({ eyebrow, title, intro, image }: { eyebrow: string; 
   return (
     <section className="relative overflow-hidden border-b border-palm-900/8 bg-[#f3eddf] pt-36 pb-16 sm:pt-40 sm:pb-20">
       <div className="pattern-fronds absolute inset-0 opacity-70" aria-hidden />
-      <div className="container-site relative grid items-end gap-10 lg:grid-cols-12">
+      <div className="container-site relative grid grid-cols-1 items-end gap-10 lg:grid-cols-12">
         <div className={image ? "lg:col-span-7" : "lg:col-span-9"}>
           <p className="eyebrow flex items-center gap-3 text-gold-700">
             <span className="h-px w-8 bg-current opacity-60" aria-hidden />

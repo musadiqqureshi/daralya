@@ -371,3 +371,17 @@ describe("row-level security", () => {
     await actAs(db, owner);
   });
 });
+
+describe("reports", () => {
+  it("sales and purchase reports work for every grouping", async () => {
+    await actAs(db, owner);
+    for (const g of ["day", "product", "customer", "driver"]) {
+      const r = await db.query("select * from public.report_sales('2000-01-01', '2100-01-01', $1)", [g]);
+      expect(r.rows.length).toBeGreaterThan(0);
+    }
+    for (const g of ["day", "supplier", "product"]) {
+      const r = await db.query("select * from public.report_purchases('2000-01-01', '2100-01-01', $1)", [g]);
+      expect(r.rows.length).toBeGreaterThan(0);
+    }
+  });
+});

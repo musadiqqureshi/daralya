@@ -31,7 +31,7 @@ export default async function ReportsPage(props: PageProps<"/erp/reports">) {
   return (
     <>
       <PageHeader title={t.title} description={t.subtitle} />
-      <div className="grid gap-6 lg:grid-cols-[14rem_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[14rem_1fr]">
         <nav aria-label={t.title} className="print:hidden">
           <ul className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
             {available.map((r) => (

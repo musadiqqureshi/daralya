@@ -172,7 +172,7 @@ export function AttendanceCamera({ employees, canManual, notice }: { employees: 
   const canAct = (e: CamEmployee) => (mode === "in" ? !e.today?.check_in_at : Boolean(e.today?.check_in_at) && !e.today?.check_out_at);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
       {/* Step 1: mode + employee */}
       <section className="space-y-4" aria-label={t.selectEmployee}>
         <div className="grid grid-cols-2 gap-1 rounded-xl border bg-card p-1" role="radiogroup" aria-label={t.mark}>

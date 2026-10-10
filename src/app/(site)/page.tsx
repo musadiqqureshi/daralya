@@ -22,7 +22,7 @@ export default async function HomePage() {
 
       {/* Introduction */}
       <section id="intro" className="container-site scroll-mt-20 py-24 sm:py-32">
-        <div className="grid gap-14 lg:grid-cols-12 lg:gap-10">
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-12 lg:gap-10">
           <Reveal className="lg:col-span-6">
             <SectionHeading eyebrow={dict.site.home.introEyebrow} title={content.home.introTitle[locale]} />
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-foreground/75">{content.home.introBody[locale]}</p>
@@ -36,7 +36,7 @@ export default async function HomePage() {
               </ul>
             )}
           </Reveal>
-          <ol className="grid gap-px overflow-hidden rounded-[1.5rem] border border-palm-900/10 bg-palm-900/10 sm:grid-cols-3 lg:col-span-6 lg:grid-cols-1">
+          <ol className="grid grid-cols-1 gap-px overflow-hidden rounded-[1.5rem] border border-palm-900/10 bg-palm-900/10 sm:grid-cols-3 lg:col-span-6 lg:grid-cols-1">
             {content.home.highlights.map((h, i) => (
               <Reveal as="li" key={i} delay={i * 0.08} className="flex gap-5 bg-cream p-6 sm:flex-col lg:flex-row lg:items-start lg:p-7">
                 <span className="font-display text-4xl leading-none text-gold-500 tabular-nums">0{i + 1}</span>
@@ -61,7 +61,7 @@ export default async function HomePage() {
             </Link>
           </div>
           {featured.length > 0 ? (
-            <ul className="mt-12 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-12 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((p, i) => (
                 <Reveal as="li" key={p.id} delay={(i % 4) * 0.06}>
                   <ProductCard product={p} locale={locale} dict={dict} />
@@ -77,7 +77,7 @@ export default async function HomePage() {
       {/* Process */}
       <section className="relative overflow-hidden bg-palm-900 py-24 text-cream sm:py-32">
         <div className="pattern-fronds absolute inset-0 opacity-50" aria-hidden />
-        <div className="container-site relative grid gap-14 lg:grid-cols-12">
+        <div className="container-site relative grid grid-cols-1 gap-14 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SectionHeading tone="light" eyebrow={dict.site.home.processEyebrow} title={dict.site.home.processTitle} />
             <div className="relative mt-10 aspect-[4/5] overflow-hidden rounded-[1.5rem] ring-1 ring-white/10">

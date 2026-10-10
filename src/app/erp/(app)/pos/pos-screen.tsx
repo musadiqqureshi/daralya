@@ -276,7 +276,7 @@ export function PosScreen({
   const unitLabel = (u: string) => dict.erp.units[u as keyof typeof dict.erp.units] ?? u;
 
   return (
-    <div className={cn("grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]", count > 0 && "pb-20 lg:pb-0")}>
+    <div className={cn("grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]", count > 0 && "pb-20 lg:pb-0")}>
       {/* ── products ─────────────────────────────── */}
       <section className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -496,7 +496,7 @@ export function PosScreen({
               {lines.map((l) => {
                 const p = byId.get(l.id)!;
                 return (
-                  <li key={l.id} className="grid gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <li key={l.id} className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-center">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{p.name}</p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -537,10 +537,10 @@ export function PosScreen({
               })}
             </ul>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={dict.erp.fields.customer} required className="sm:col-span-2">
                 <div className="flex gap-2">
-                  <EntitySelect className="h-10" options={customers} value={customer} onChange={setCustomer} />
+                  <EntitySelect className="h-10 min-w-0 flex-1" options={customers} value={customer} onChange={setCustomer} />
                   {canAddCustomer && (
                     <QuickCustomer
                       onCreated={(c) => {
@@ -570,7 +570,7 @@ export function PosScreen({
                     <ModeButton big active={!paidNow} onClick={() => setPaidNow(false)}>{t.onCredit}</ModeButton>
                   </div>
                   {paidNow && (
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <select aria-label={dict.erp.fields.method} className={nativeSelect} value={payMethod} onChange={(e) => setPayMethod(e.target.value)}>
                         {methods.map((m) => (
                           <option key={m.id} value={m.id}>{name(m)}</option>

@@ -105,14 +105,14 @@ export default async function CustomerPage(props: PageProps<"/erp/customers/[id]
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label={dict.common.balance} value={fmtMoney(balance, locale)} hint={t.customers.balanceHint} tone={balance > 0 ? "brand" : "default"} />
         <StatCard label={t.customers.totalBilled} value={fmtMoney(billed, locale)} hint={`${posted.length} ${t.customers.invoices}`} />
         <StatCard label={t.status.pending_verification} value={fmtMoney(pending, locale)} />
         <StatCard label={t.fields.creditLimit} value={c.credit_limit ? fmtMoney(c.credit_limit, locale) : "—"} tone={c.credit_limit && balance > Number(c.credit_limit) ? "negative" : "default"} />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1fr_20rem]">
         <UrlTabs
           tabs={[
             { value: "invoices", label: t.customers.invoices, count: posted.length, content: <SalesTable rows={sales} showCustomer={false} /> },

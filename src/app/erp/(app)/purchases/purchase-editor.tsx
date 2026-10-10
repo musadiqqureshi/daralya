@@ -91,10 +91,10 @@ export function PurchaseEditor({
     );
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
       <div className="space-y-6">
         <Section>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label={t.fields.supplier} required className="sm:col-span-2">
               <EntitySelect options={suppliers} value={supplier} onChange={setSupplier} />
             </Field>
@@ -150,7 +150,7 @@ export function PurchaseEditor({
         </Section>
 
         <Section title={t.purchases.extras} description={t.purchases.extrasHint}>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label={t.fields.transport} htmlFor="pu-tr">
               <Input id="pu-tr" type="number" min="0" step="0.01" value={transport} onChange={(e) => setTransport(e.target.value)} />
             </Field>
