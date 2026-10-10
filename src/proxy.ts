@@ -33,10 +33,10 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // Do not run code between createServerClient and getUser (session refresh happens here).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Do not run code between createServerClient and getClaims (session refresh happens here).
+  // getClaims verifies the JWT locally with the project's public signing keys (no Auth round trip).
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub } : null;
 
   if (!isErp && !isPrint) return response;
 

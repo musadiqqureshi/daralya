@@ -1,4 +1,5 @@
 "use server";
+import { after } from "next/server";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { isoDate, money, optText, qty, uuid } from "@/lib/erp/schemas";
@@ -29,7 +30,7 @@ export type SaleInput = z.input<typeof schema>;
  * Prices and discounts arrive in the chosen currency. The database converts them
  * to SAR with the stored live rate (refreshed here first) and keeps the original.
  */
-export async function createSale(input: SaleInput): Promise<ActionResult<string>> {
+export async function createSale(input: SaleInput, opts: { fast?: boolean } = {}): Promise<ActionResult<string>> {
   const parsed = schema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
   const { customer_email, ...p } = parsed.data;
@@ -41,12 +42,14 @@ export async function createSale(input: SaleInput): Promise<ActionResult<string>
   // capture a customer email given at the counter (only fills an empty field)
   if (customer_email) await supabase.from("customers").update({ email: customer_email }).eq("id", p.customer_id).is("email", null);
 
-  const res = await callRpc<string>("sale_create_fx", { p });
+  const res = await callRpc<string>("sale_create_fx", { p }, opts.fast ? false : []);
   if (!res.ok || !res.data) return res;
   const dict = await getDictionary();
   const session = await getSession();
-  const mail = await mailInvoice(supabase, res.data, { auto: true, sentBy: session?.userId });
-  return { ...res, message: mail.ok ? `${dict.erp.sales.posted} · ${dict.erp.sales.emailed}` : dict.erp.sales.posted };
+  const saleId = res.data;
+  // the emailed invoice goes out after the response, so the counter never waits for the mail server
+  after(() => mailInvoice(supabase, saleId, { auto: true, sentBy: session?.userId }));
+  return { ...res, message: dict.erp.sales.posted };
 }
 
 export async function emailInvoice(id: string, to?: string): Promise<ActionResult> {

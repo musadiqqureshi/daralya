@@ -73,7 +73,7 @@ export default async function InvoicePrint(props: PageProps<"/print/invoice/[id]
 
   return (
     <>
-      <PrintToolbar />
+      <PrintToolbar autoPrint={sp.autoprint === "1"} />
       <style>{receipt ? "@page { size: 80mm auto; margin: 3mm; }" : "@page { size: A4; margin: 12mm; }"}</style>
       <article
         dir={lang === "ar" ? "rtl" : "ltr"}

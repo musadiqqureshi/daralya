@@ -1,5 +1,6 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { SITE_TAG } from "@/lib/site/data";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { optText, uuid } from "@/lib/erp/schemas";
@@ -18,6 +19,7 @@ const schema = z.object({
   weight_kg: z.coerce.number().positive().max(10000),
   barcode: optText(64),
   selling_price: z.coerce.number().min(0),
+  wholesale_price: z.union([z.literal("").transform(() => null), z.null(), z.coerce.number().min(0)]).optional(),
   purchase_price: z.coerce.number().min(0).optional(),
   min_stock: z.coerce.number().min(0),
   is_active: z.boolean(),
@@ -45,7 +47,10 @@ export async function saveProduct(input: ProductInput): Promise<ActionResult<str
     }
     return must(await supabase.from("products").insert(payload).select("id").single()).id as string;
   });
-  if (res.ok) revalidatePath("/", "layout");
+  if (res.ok) {
+    updateTag(SITE_TAG);
+    revalidatePath("/", "layout");
+  }
   return res;
 }
 
@@ -57,7 +62,10 @@ export async function addProductImage(productId: string, src: string, alt_en: st
     must(await supabase.from("product_images").insert({ product_id: productId, src, alt_en, alt_ar, sort_order: count ?? 0 }));
     return undefined;
   });
-  if (res.ok) revalidatePath("/", "layout");
+  if (res.ok) {
+    updateTag(SITE_TAG);
+    revalidatePath("/", "layout");
+  }
   return res;
 }
 
@@ -68,7 +76,10 @@ export async function removeProductImage(imageId: string): Promise<ActionResult>
     if (!/^https?:\/\//.test(img.src)) await supabase.storage.from("products").remove([img.src]);
     return undefined;
   });
-  if (res.ok) revalidatePath("/", "layout");
+  if (res.ok) {
+    updateTag(SITE_TAG);
+    revalidatePath("/", "layout");
+  }
   return res;
 }
 
@@ -82,7 +93,10 @@ export async function moveProductImage(productId: string, imageId: string, dir: 
     await Promise.all(imgs.map((x, k) => supabase.from("product_images").update({ sort_order: k }).eq("id", x.id)));
     return undefined;
   });
-  if (res.ok) revalidatePath("/", "layout");
+  if (res.ok) {
+    updateTag(SITE_TAG);
+    revalidatePath("/", "layout");
+  }
   return res;
 }
 
@@ -91,6 +105,9 @@ export async function setProductFlags(id: string, flags: { is_published?: boolea
     must(await supabase.from("products").update(flags).eq("id", id));
     return undefined;
   });
-  if (res.ok) revalidatePath("/", "layout");
+  if (res.ok) {
+    updateTag(SITE_TAG);
+    revalidatePath("/", "layout");
+  }
   return res;
 }

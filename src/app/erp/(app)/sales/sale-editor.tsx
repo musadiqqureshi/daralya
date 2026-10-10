@@ -480,7 +480,7 @@ export function SaleEditor({
   );
 }
 
-function QuickCustomer({ onCreated, big }: { onCreated: (c: Option & { driver_id: null; address: string | null; balance: number; credit_limit: null; email: string | null }) => void; big?: boolean }) {
+export function QuickCustomer({ onCreated, big }: { onCreated: (c: Option & { driver_id: null; address: string | null; balance: number; credit_limit: null; email: string | null }) => void; big?: boolean }) {
   const { dict } = useI18n();
   const t = dict.erp.pos;
   const [open, setOpen] = useState(false);

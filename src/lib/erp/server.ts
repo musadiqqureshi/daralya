@@ -7,15 +7,18 @@ import { createClient } from "@/lib/supabase/server";
 import { translateDbError } from "./db-errors";
 
 /** Call a permission-checked database function as the signed-in user. */
-export async function callRpc<T = unknown>(fn: string, args: Record<string, unknown>, revalidate: string[] = []): Promise<ActionResult<T>> {
+export async function callRpc<T = unknown>(fn: string, args: Record<string, unknown>, revalidate: string[] | false = []): Promise<ActionResult<T>> {
   const session = await getSession();
   const dict = await getDictionary();
   if (!session) return { ok: false, error: dict.common.permissionDenied };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc(fn, args);
   if (error) return { ok: false, error: await translateDbError(friendlyError(error)) };
-  revalidatePath("/erp", "layout");
-  revalidate.forEach((p) => revalidatePath(p));
+  // false = caller updates its own screen (POS), so the action returns without re-rendering the page
+  if (revalidate !== false) {
+    revalidatePath("/erp", "layout");
+    revalidate.forEach((p) => revalidatePath(p));
+  }
   return { ok: true, data: data as T };
 }
 

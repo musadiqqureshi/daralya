@@ -1,5 +1,6 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { SITE_TAG } from "@/lib/site/data";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { callRpc, guarded, must } from "@/lib/erp/server";
@@ -21,7 +22,10 @@ export async function publishSection(key: string, content: unknown): Promise<Act
   const saved = await saveDraft(key, content);
   if (!saved.ok) return saved;
   const res = await callRpc<undefined>("site_content_publish", { p_key: key });
-  if (res.ok) revalidatePath("/", "layout");
+  if (res.ok) {
+    updateTag(SITE_TAG);
+    revalidatePath("/", "layout");
+  }
   return res;
 }
 

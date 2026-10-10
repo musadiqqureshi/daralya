@@ -25,7 +25,7 @@ export default async function ProductPage(props: PageProps<"/erp/products/[id]">
   const supabase = await createClient();
   const { data: p } = await supabase
     .from("products")
-    .select("id, sku, barcode, slug, name_en, name_ar, name_ur, variety, grade, unit, weight_kg, selling_price, min_stock, is_active, is_published, is_featured, public_availability, packaging_en, packaging_ar, description_en, description_ar, specs, sort_order")
+    .select("id, sku, barcode, slug, name_en, name_ar, name_ur, variety, grade, unit, weight_kg, selling_price, wholesale_price, min_stock, is_active, is_published, is_featured, public_availability, packaging_en, packaging_ar, description_en, description_ar, specs, sort_order")
     .eq("id", id)
     .maybeSingle();
   if (!p) notFound();
@@ -123,7 +123,7 @@ export default async function ProductPage(props: PageProps<"/erp/products/[id]">
         <div className="space-y-6">
           <ProductImages productId={id} images={images ?? []} name={{ en: p.name_en, ar: p.name_ar }} />
           <ProductForm
-            initial={{ ...p, purchase_price, weight_kg: Number(p.weight_kg), selling_price: Number(p.selling_price), min_stock: Number(p.min_stock) }}
+            initial={{ ...p, purchase_price, weight_kg: Number(p.weight_kg), selling_price: Number(p.selling_price), wholesale_price: p.wholesale_price === null ? null : Number(p.wholesale_price), min_stock: Number(p.min_stock) }}
             canSeeCost={canCost}
             varieties={[...new Set((all ?? []).map((x) => x.variety as string))].sort()}
           />

@@ -19,10 +19,11 @@ export type Session = {
 export const getSession = cache(async (): Promise<Session | null> => {
   if (!isSupabaseConfigured) return null;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // verified locally against the project's signing keys (fast); falls back to the Auth server if needed
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (!claims?.sub) return null;
+  const user = { id: claims.sub as string, email: (claims.email as string | undefined) ?? null };
   const [{ data: profile }, { data: perms }] = await Promise.all([
     supabase.from("profiles").select("id, full_name, role, is_active, locale, driver_id, employee_id").eq("id", user.id).maybeSingle(),
     supabase.rpc("my_permissions"),

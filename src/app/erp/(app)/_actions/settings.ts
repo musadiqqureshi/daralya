@@ -1,5 +1,6 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { SITE_TAG } from "@/lib/site/data";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { guarded, must } from "@/lib/erp/server";
@@ -51,7 +52,10 @@ export async function saveSettings(patch: z.input<typeof settingsSchema>): Promi
     must(await supabase.from("settings").update(parsed.data).eq("id", 1));
     return undefined;
   });
-  if (res.ok) revalidatePath("/", "layout");
+  if (res.ok) {
+    updateTag(SITE_TAG);
+    revalidatePath("/", "layout");
+  }
   return res;
 }
 

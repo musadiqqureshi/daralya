@@ -1,70 +1,79 @@
-import Link from "next/link";
-import { CheckCircle2, FileText, Printer, Receipt } from "lucide-react";
 import { NoAccess } from "@/components/erp/no-access";
-import { PageHeader } from "@/components/erp/page-header";
-import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/auth";
-import { tpl } from "@/lib/i18n/dictionaries/en";
-import { fmtMoney, monthStart, todayRiyadh } from "@/lib/i18n/format";
-import { getDictionary, getLocale } from "@/lib/i18n/server";
+import { getRates } from "@/lib/erp/fx";
+import { getCustomers, getMoneyAccounts, getPaymentMethods, getSettings, getStorages } from "@/lib/erp/lookups";
+import { monthStart, todayRiyadh } from "@/lib/i18n/format";
+import { getLocale } from "@/lib/i18n/server";
+import { publicStorageUrl } from "@/lib/supabase/urls";
 import { createClient } from "@/lib/supabase/server";
-import { saleEditorProps } from "../sales/editor-data";
-import { SaleEditor } from "../sales/sale-editor";
+import { PosScreen, type PosProduct } from "./pos-screen";
 
-/** The salesman's home: scanner first, then customer, then save. */
-export default async function PosPage(props: PageProps<"/erp/pos">) {
+type OverviewRow = {
+  product_id: string; sku: string; barcode: string | null; name_en: string; name_ar: string; variety: string; grade: string | null;
+  unit: string; weight_kg: number; selling_price: number; wholesale_price: number | null; by_storage: Record<string, number> | null; image: string | null;
+};
+
+/** The salesman's counter: tap or scan products, check out, slip prints itself. */
+export default async function PosPage() {
   const session = await requireSession();
   if (!session.can("sales.create")) return <NoAccess />;
-  const sp = await props.searchParams;
-  const last = typeof sp.last === "string" ? sp.last : null;
   const locale = await getLocale();
-  const dict = await getDictionary(locale);
-  const t = dict.erp.pos;
+  const ar = locale === "ar";
   const supabase = await createClient();
   const today = todayRiyadh();
   // "my" figures: RLS limits a salesman to his own invoices
   const mine = supabase.from("sales").select("total, returned_total, sale_date").eq("status", "posted").gte("sale_date", monthStart(today));
-  const [editor, { data: month }, lastSale] = await Promise.all([
-    saleEditorProps(session, locale, dict),
+  const [{ data: overview }, customers, storages, accounts, methods, settings, fx, { data: month }] = await Promise.all([
+    supabase.rpc("stock_overview"),
+    getCustomers(),
+    getStorages(),
+    getMoneyAccounts(),
+    getPaymentMethods(),
+    getSettings(),
+    getRates(),
     session.can("sales.view_all") ? mine.eq("created_by", session.userId) : mine,
-    last ? supabase.from("sales").select("id, invoice_no, total, currency").eq("id", last).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const rows = (month ?? []) as { total: number; returned_total: number; sale_date: string }[];
-  const sum = (xs: typeof rows) => xs.reduce((s, r) => s + Number(r.total) - Number(r.returned_total), 0);
+  const net = (r: (typeof rows)[number]) => Number(r.total) - Number(r.returned_total);
   const todays = rows.filter((r) => r.sale_date === today);
-  const ls = lastSale.data;
+
+  const products: PosProduct[] = ((overview ?? []) as OverviewRow[]).map((p) => ({
+    id: p.product_id,
+    sku: p.sku,
+    barcode: p.barcode,
+    name: ar ? p.name_ar : p.name_en,
+    other: ar ? p.name_en : p.name_ar,
+    variety: p.variety,
+    grade: p.grade,
+    unit: p.unit,
+    weight_kg: Number(p.weight_kg) || 1,
+    retail: Number(p.selling_price),
+    wholesale: p.wholesale_price === null ? null : Number(p.wholesale_price),
+    stock: p.by_storage ?? {},
+    image: publicStorageUrl("products", p.image),
+  }));
+  const walkIn = customers.find((c) => /walk-in/i.test(c.name));
 
   return (
-    <>
-      <PageHeader
-        title={t.title}
-        description={t.subtitle}
-        actions={
-          <div className="flex gap-2 text-sm">
-            <div className="rounded-xl border bg-card px-4 py-2">
-              <p className="text-xs text-muted-foreground">{t.today}</p>
-              <p className="font-semibold tabular-nums" dir="ltr">{fmtMoney(sum(todays), locale)} <span className="text-xs font-normal text-muted-foreground">· {todays.length}</span></p>
-            </div>
-            <div className="rounded-xl border bg-card px-4 py-2">
-              <p className="text-xs text-muted-foreground">{t.month}</p>
-              <p className="font-semibold tabular-nums" dir="ltr">{fmtMoney(sum(rows), locale)} <span className="text-xs font-normal text-muted-foreground">· {rows.length}</span></p>
-            </div>
-          </div>
-        }
-      />
-      {ls && (
-        <div role="status" className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-palm-700/25 bg-palm-50 p-4">
-          <CheckCircle2 className="size-6 text-success" />
-          <p className="me-auto font-semibold text-palm-900">
-            {tpl(t.lastSaved, { no: ls.invoice_no })} · <span dir="ltr">{fmtMoney(ls.total, locale)}</span>
-          </p>
-          <Button asChild size="lg"><Link href={`/print/invoice/${ls.id}?format=receipt`} target="_blank"><Receipt />{dict.common.printReceipt}</Link></Button>
-          <Button asChild variant="outline" size="lg"><Link href={`/print/invoice/${ls.id}`} target="_blank"><Printer />{dict.common.printA4}</Link></Button>
-          <Button asChild variant="ghost" size="lg"><Link href={`/erp/sales/${ls.id}`}><FileText />{t.openInvoice}</Link></Button>
-        </div>
-      )}
-      {/* key resets the form after each saved invoice */}
-      <SaleEditor key={last ?? "new"} {...editor} simple />
-    </>
+    <PosScreen
+      products={products}
+      customers={customers.map((c) => ({
+        value: c.id,
+        label: (ar ? c.name_ar || c.name : c.name) ?? "",
+        sub: c.phone ?? c.code,
+        keywords: [c.code, c.phone ?? "", c.name, c.name_ar ?? ""],
+        email: c.email,
+      }))}
+      defaultCustomer={walkIn?.id ?? null}
+      storages={storages}
+      accounts={accounts}
+      methods={methods}
+      vat={{ enabled: Boolean(settings?.vat_enabled), rate: Number(settings?.vat_rate ?? 15) }}
+      rates={fx.rates}
+      totals={{ today: todays.reduce((s, r) => s + net(r), 0), todayCount: todays.length, month: rows.reduce((s, r) => s + net(r), 0), monthCount: rows.length }}
+      canCollect={session.canAny("payments.create", "sales.collect") && accounts.length > 0}
+      canOverridePrice={session.can("sales.price_override")}
+      canAddCustomer={session.can("customers.manage")}
+    />
   );
 }

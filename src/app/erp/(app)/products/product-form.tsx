@@ -137,6 +137,9 @@ export function ProductForm({ initial, canSeeCost, varieties }: { initial?: Part
             <Field label={f.sellingPrice} htmlFor="pf-price" required>
               <Input id="pf-price" type="number" min="0" step="0.01" value={num(v.selling_price, 0)} onChange={text("selling_price")} />
             </Field>
+            <Field label={f.wholesalePrice} htmlFor="pf-wholesale">
+              <Input id="pf-wholesale" type="number" min="0" step="0.01" value={(v.wholesale_price as number | string | null | undefined) ?? ""} onChange={text("wholesale_price")} />
+            </Field>
             {canSeeCost && (
               <Field label={f.purchasePrice} htmlFor="pf-cost">
                 <Input id="pf-cost" type="number" min="0" step="0.01" value={num(v.purchase_price, 0)} onChange={text("purchase_price")} />

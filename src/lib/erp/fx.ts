@@ -1,9 +1,11 @@
 import "server-only";
+import { after } from "next/server";
 import { createAdminClient, hasAdminKey } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { CURRENCIES, type Currency, type Rates } from "./currency";
 
 const MAX_AGE_MS = 60 * 60 * 1000; // refresh at most hourly
+const BLOCK_AGE_MS = 20 * 60 * 60 * 1000; // the database refuses rates older than 24h, so wait for a refresh past 20h
 
 /**
  * Live exchange rates as SAR per 1 unit. Cached in `exchange_rates` and refreshed
@@ -16,9 +18,15 @@ export async function getRates(opts: { force?: boolean } = {}): Promise<Rates> {
   const rows = (data ?? []) as { currency: Currency; sar_per_unit: number; fetched_at: string }[];
   const oldest = rows.length ? Math.min(...rows.map((r) => new Date(r.fetched_at).getTime())) : 0;
   const missing = CURRENCIES.some((c) => c !== "SAR" && !rows.find((r) => r.currency === c));
-  if ((opts.force || missing || Date.now() - oldest > MAX_AGE_MS) && hasAdminKey()) {
-    const fresh = await refreshRates();
-    if (fresh) return fresh;
+  const age = Date.now() - oldest;
+  if (hasAdminKey()) {
+    if (opts.force || missing || age > BLOCK_AGE_MS) {
+      const fresh = await refreshRates();
+      if (fresh) return fresh;
+    } else if (age > MAX_AGE_MS) {
+      // stale but still valid: answer now, refresh after the response is sent
+      after(() => refreshRates());
+    }
   }
   return {
     rates: { SAR: 1, ...Object.fromEntries(rows.map((r) => [r.currency, Number(r.sar_per_unit)])) },

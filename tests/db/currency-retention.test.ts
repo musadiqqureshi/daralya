@@ -96,6 +96,42 @@ describe("salesman view", () => {
   });
 });
 
+describe("salesman posting under row-level security", () => {
+  it("a salesman's paid invoice commits (balance check sees every journal line)", async () => {
+    await actAs(db, owner);
+    const acct = await id("insert into public.money_accounts (name_en, name_ar, kind) values ('Till', 'صندوق', 'cash')");
+    const method = (await one<{ id: string }>(db, "select id from public.payment_methods where not requires_verification order by sort_order limit 1")).id;
+    const seller = await createUser(db, "sales", "sellerRls");
+    await actAs(db, seller, "authenticated");
+    const sale = await rpc<string>(db, "sale_create_fx", [{
+      customer_id: ids.customer, storage_id: ids.store,
+      lines: [{ product_id: ids.product, qty: 1, unit_price: 50 }, { product_id: ids.product, qty: 2, unit_price: 45 }],
+      payment: { amount: 140, method_id: method, money_account_id: acct },
+    }]);
+    await actAs(db, owner);
+    expect(sale).toBeTruthy();
+    const s = await one<{ payment_status: string }>(db, "select payment_status from public.sales where id = $1", [sale]);
+    expect(s.payment_status).toBe("paid");
+    expect(await trialBalanceDiff(db)).toBe(0);
+  });
+});
+
+describe("pos grid data", () => {
+  it("stock overview carries the wholesale price and first photo", async () => {
+    await actAs(db, owner);
+    await db.query("update public.products set wholesale_price = 42 where id = $1", [ids.product]);
+    await db.query("insert into public.product_images (product_id, src, sort_order) values ($1, 'b.jpg', 2), ($1, 'a.jpg', 1)", [ids.product]);
+    const s = await createUser(db, "sales", "sellerE");
+    await actAs(db, s, "authenticated");
+    const r = await one<{ wholesale_price: string; image: string }>(db, "select wholesale_price::text, image from public.stock_overview() where product_id = $1", [ids.product]);
+    const own = await one<{ w: string }>(db, "select wholesale_price::text as w from public.products where id = $1", [ids.product]);
+    await actAs(db, owner);
+    expect(Number(r.wholesale_price)).toBe(42);
+    expect(r.image).toBe("a.jpg");
+    expect(Number(own.w)).toBe(42);
+  });
+});
+
 describe("admin set stock", () => {
   it("sets the counted quantity up and down with audited adjustments", async () => {
     await actAs(db, owner);
