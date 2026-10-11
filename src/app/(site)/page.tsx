@@ -1,13 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import type { Metadata } from "next";
 import { Hero } from "@/components/site/hero";
+import { JsonLd } from "@/components/site/json-ld";
 import { ProductCard } from "@/components/site/product-card";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { getPublicProducts, getSiteContent } from "@/lib/site/data";
+import { buildFaq } from "@/lib/site/faq";
+import { faqLd, pageMeta } from "@/lib/site/seo";
 import { publicStorageUrl } from "@/lib/supabase/urls";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [locale, content] = await Promise.all([getLocale(), getSiteContent()]);
+  const dict = await getDictionary(locale);
+  return pageMeta({ path: "/", locale, title: content.seo.title[locale] || dict.meta.title, description: content.seo.description[locale] || dict.meta.description, absoluteTitle: true });
+}
 
 export default async function HomePage() {
   const [locale, content, products] = await Promise.all([getLocale(), getSiteContent(), getPublicProducts()]);
@@ -15,6 +25,7 @@ export default async function HomePage() {
   // every published product, featured varieties first
   const featured = [...products].sort((a, b) => Number(b.is_featured) - Number(a.is_featured) || a.sort_order - b.sort_order);
   const varieties = Array.from(new Set(products.map((p) => p.variety)));
+  const faq = buildFaq(content, products, locale);
 
   return (
     <>
@@ -103,6 +114,27 @@ export default async function HomePage() {
               </Reveal>
             ))}
           </ol>
+        </div>
+      </section>
+
+      {/* Questions buyers ask (also published as FAQPage data for answer engines) */}
+      <section id="faq" className="container-site scroll-mt-20 pb-8 pt-24 sm:pt-32">
+        <JsonLd data={faqLd(faq)} />
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <SectionHeading eyebrow={dict.site.home.faqEyebrow} title={dict.site.home.faqTitle} />
+          </div>
+          <div className="divide-y divide-palm-900/10 border-y border-palm-900/10 lg:col-span-8">
+            {faq.map((f) => (
+              <details key={f.q} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg font-semibold text-palm-900 [&::-webkit-details-marker]:hidden">
+                  <h3>{f.q}</h3>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-palm-900/15 text-xl leading-none transition-transform group-open:rotate-45" aria-hidden>+</span>
+                </summary>
+                <p className="mt-3 max-w-2xl leading-relaxed text-foreground/75">{f.a}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 

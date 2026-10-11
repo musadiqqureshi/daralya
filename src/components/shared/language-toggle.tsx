@@ -18,7 +18,12 @@ export function LanguageToggle({ className, compact = false }: { className?: str
       onClick={() =>
         start(async () => {
           await setLocale(next);
-          router.refresh();
+          // a ?lang= link pins the language, so drop it or the old choice would win again
+          const url = new URL(window.location.href);
+          if (url.searchParams.has("lang")) {
+            url.searchParams.delete("lang");
+            router.replace(url.pathname + url.search + url.hash, { scroll: false });
+          } else router.refresh();
         })
       }
       disabled={pending}

@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n/client";
 import { dirOf } from "@/lib/i18n/config";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
+import { getSiteContent } from "@/lib/site/data";
+import { SITE_URL } from "@/lib/site/seo";
 import "./globals.css";
 
 const display = Cormorant_Garamond({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-display-en", display: "swap" });
@@ -14,12 +16,37 @@ const bodyAr = IBM_Plex_Sans_Arabic({ subsets: ["arabic"], weight: ["400", "500"
 const displayAr = Amiri({ subsets: ["arabic"], weight: ["400", "700"], variable: "--font-display-ar", display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dict = await getDictionary();
+  const [locale, content] = await Promise.all([getLocale(), getSiteContent()]);
+  const dict = await getDictionary(locale);
+  // admin-editable in ERP → Website (SEO), dictionary as fallback
+  const title = content.seo.title[locale] || dict.meta.title;
+  const description = content.seo.description[locale] || dict.meta.description;
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-    title: { default: dict.meta.title, template: `%s · ${dict.common.brand}` },
-    description: dict.meta.description,
-    icons: { icon: "/icon.svg" },
+    metadataBase: new URL(SITE_URL),
+    title: { default: title, template: `%s · ${dict.common.brand}` },
+    description,
+    applicationName: dict.common.brand,
+    keywords:
+      locale === "ar"
+        ? ["تمور", "تمور المدينة المنورة", "عجوة المدينة", "تمر سكري", "تمر صقعي", "تمر مجدول", "تمور بالجملة", "دار العالية للتمور", "العوالي"]
+        : ["Saudi dates", "Madinah dates", "Ajwa dates", "Sukari dates", "Majdool dates", "wholesale dates", "Dar Al-Aaliya Dates", "Al-Awali Madinah"],
+    authors: [{ name: dict.common.brand, url: SITE_URL }],
+    creator: dict.common.brand,
+    publisher: dict.common.brand,
+    formatDetection: { telephone: true, address: true, email: true },
+    openGraph: {
+      type: "website",
+      siteName: locale === "ar" ? "دار العالية للتمور" : "Dar Al-Aaliya Dates",
+      title,
+      description,
+      url: SITE_URL,
+      locale: locale === "ar" ? "ar_SA" : "en_US",
+    },
+    twitter: { card: "summary_large_image", title, description },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
+    ...(process.env.GOOGLE_SITE_VERIFICATION || process.env.BING_SITE_VERIFICATION
+      ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION, other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined } }
+      : {}),
   };
 }
 

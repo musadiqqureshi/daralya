@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site/seo";
 import Image from "next/image";
 import { PageHeader } from "@/components/site/page-header";
 import { Reveal } from "@/components/site/reveal";
@@ -7,8 +8,9 @@ import { getSiteContent } from "@/lib/site/data";
 import { publicStorageUrl } from "@/lib/supabase/urls";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dict = await getDictionary();
-  return { title: dict.site.quality.eyebrow };
+  const locale = await getLocale();
+  const dict = await getDictionary(locale);
+  return pageMeta({ path: "/quality", locale, title: dict.site.quality.eyebrow });
 }
 
 export default async function QualityPage() {

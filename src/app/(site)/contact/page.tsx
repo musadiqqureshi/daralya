@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site/seo";
 import { Clock, MapPin, MessageCircle, Phone, Mail, ExternalLink } from "lucide-react";
 import { InquiryForm } from "@/components/site/inquiry-form";
 import { PageHeader } from "@/components/site/page-header";
@@ -6,8 +7,9 @@ import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { getPublicProducts, getSiteContent } from "@/lib/site/data";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dict = await getDictionary();
-  return { title: dict.site.contact.eyebrow, description: dict.site.contact.intro };
+  const locale = await getLocale();
+  const dict = await getDictionary(locale);
+  return pageMeta({ path: "/contact", locale, title: dict.site.contact.eyebrow, description: dict.site.contact.intro });
 }
 
 export default async function ContactPage(props: PageProps<"/contact">) {

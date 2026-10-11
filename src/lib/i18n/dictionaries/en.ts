@@ -139,6 +139,8 @@ export const en = {
       ctaTitle: "Supplying a shop, hotel or event?",
       ctaBody: "Tell us the varieties and quantities you need and our team will reply with availability and pricing.",
       ctaButton: "Request a quotation",
+      faqEyebrow: "Questions",
+      faqTitle: "Frequently asked questions",
     },
     portfolio: {
       eyebrow: "Product portfolio",

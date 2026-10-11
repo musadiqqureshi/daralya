@@ -3,23 +3,24 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { availabilityTone, ProductCard } from "@/components/site/product-card";
+import { JsonLd } from "@/components/site/json-ld";
 import { ProductGallery } from "@/components/site/product-gallery";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { getPublicProduct, getPublicProducts, getSiteContent } from "@/lib/site/data";
-import { publicStorageUrl } from "@/lib/supabase/urls";
+import { breadcrumbLd, pageMeta, productLd } from "@/lib/site/seo";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(props: PageProps<"/portfolio/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const [p, locale] = await Promise.all([getPublicProduct(slug), getLocale()]);
   if (!p) return {};
-  const name = locale === "ar" ? p.name_ar : p.name_en;
-  const img = publicStorageUrl("products", p.images[0]?.src);
-  return {
-    title: name,
-    description: (locale === "ar" ? p.description_ar : p.description_en) ?? undefined,
-    openGraph: img ? { images: [img] } : undefined,
-  };
+  const ar = locale === "ar";
+  const name = ar ? p.name_ar : p.name_en;
+  const description =
+    (ar ? p.description_ar : p.description_en) ??
+    (ar ? `${name} — تمور ${p.variety} من دار العالية للتمور، العوالي، المدينة المنورة.` : `${name} — ${p.variety} dates from Dar Al-Aaliya Dates, Al-Awali, Madinah.`);
+  // branded preview (photo + logo) comes from ./opengraph-image
+  return pageMeta({ path: `/portfolio/${p.slug}`, locale, title: name, description, image: false });
 }
 
 export default async function ProductPage(props: PageProps<"/portfolio/[slug]">) {
@@ -41,6 +42,12 @@ export default async function ProductPage(props: PageProps<"/portfolio/[slug]">)
 
   return (
     <>
+      <JsonLd
+        data={[
+          productLd(product, locale),
+          breadcrumbLd([{ name: dict.site.nav.home, path: "/" }, { name: t.title, path: "/portfolio" }, { name, path: `/portfolio/${product.slug}` }], locale),
+        ]}
+      />
       <section className="container-site pt-28 pb-20 sm:pt-32">
         <Link href="/portfolio" className="inline-flex items-center gap-2 text-sm font-medium text-palm-800 hover:text-palm-600">
           <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />

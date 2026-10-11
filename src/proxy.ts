@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { LOCALE_COOKIE } from "@/lib/i18n/config";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/supabase/env";
 
 const ACTIVITY_COOKIE = "erp_last_seen";
@@ -13,10 +14,18 @@ export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const isErp = pathname.startsWith("/erp") && !pathname.startsWith("/erp/login");
   const isPrint = pathname.startsWith("/print");
+  // ?lang=ar|en gives each language its own crawlable URL; it becomes the locale cookie
+  const langParam = request.nextUrl.searchParams.get("lang");
+  const pinLang = langParam === "ar" || langParam === "en" ? langParam : null;
+  if (pinLang) request.cookies.set(LOCALE_COOKIE, pinLang);
+  const keepLang = (res: NextResponse) => {
+    if (pinLang) res.cookies.set(LOCALE_COOKIE, pinLang, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+    return res;
+  };
 
   if (!isSupabaseConfigured) {
     if (isErp || isPrint) return NextResponse.redirect(new URL("/erp/login", request.url));
-    return NextResponse.next();
+    return keepLang(NextResponse.next({ request }));
   }
 
   let response = NextResponse.next({ request });
@@ -38,7 +47,7 @@ export async function proxy(request: NextRequest) {
   const { data: claimsData } = await supabase.auth.getClaims();
   const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub } : null;
 
-  if (!isErp && !isPrint) return response;
+  if (!isErp && !isPrint) return keepLang(response);
 
   if (!user) {
     const login = new URL("/erp/login", request.url);

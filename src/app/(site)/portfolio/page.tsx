@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site/seo";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/site/page-header";
 import { PortfolioBrowser } from "@/components/site/portfolio-browser";
-import { getDictionary } from "@/lib/i18n/server";
+import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { getPublicProducts } from "@/lib/site/data";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dict = await getDictionary();
-  return { title: dict.site.portfolio.title, description: dict.site.portfolio.intro };
+  const locale = await getLocale();
+  const dict = await getDictionary(locale);
+  return pageMeta({ path: "/portfolio", locale, title: dict.site.portfolio.title, description: dict.site.portfolio.intro });
 }
 
 export default async function PortfolioPage() {

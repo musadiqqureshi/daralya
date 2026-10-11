@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site/seo";
 import Image from "next/image";
 import { Compass, Package, ShieldCheck, Snowflake, Target } from "lucide-react";
 import { PageHeader } from "@/components/site/page-header";
@@ -8,8 +9,9 @@ import { getSiteContent } from "@/lib/site/data";
 import { publicStorageUrl } from "@/lib/supabase/urls";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dict = await getDictionary();
-  return { title: dict.site.about.eyebrow };
+  const locale = await getLocale();
+  const dict = await getDictionary(locale);
+  return pageMeta({ path: "/about", locale, title: dict.site.about.eyebrow });
 }
 
 export default async function AboutPage() {
