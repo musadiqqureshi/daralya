@@ -5,6 +5,9 @@ import { publicStorageUrl } from "@/lib/supabase/urls";
 
 export const revalidate = 3600;
 
+// Next.js writes <image:loc> values verbatim, so "&" in photo URLs must be escaped or the XML is invalid
+const xmlEscape = (u: string) => u.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 /** Every public page in English and Arabic, linked as hreflang alternates. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await getPublicProducts();
@@ -23,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...entry("/", 1, "weekly"),
     ...entry("/portfolio", 0.9, "weekly"),
-    ...products.flatMap((p) => entry(`/portfolio/${p.slug}`, 0.8, "weekly", p.images.map((i) => publicStorageUrl("products", i.src)).filter((s): s is string => Boolean(s)).slice(0, 3))),
+    ...products.flatMap((p) => entry(`/portfolio/${p.slug}`, 0.8, "weekly", p.images.map((i) => publicStorageUrl("products", i.src)).filter((s): s is string => Boolean(s)).slice(0, 3).map(xmlEscape))),
     ...entry("/about", 0.7, "monthly"),
     ...entry("/quality", 0.6, "monthly"),
     ...entry("/contact", 0.7, "monthly"),
