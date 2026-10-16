@@ -1,9 +1,9 @@
 import { NoAccess } from "@/components/erp/no-access";
 import { requireSession } from "@/lib/auth";
 import { getRates } from "@/lib/erp/fx";
-import { getCustomers, getMoneyAccounts, getPaymentMethods, getSettings, getStorages } from "@/lib/erp/lookups";
+import { getCustomers, getDrivers, getMoneyAccounts, getPaymentMethods, getSettings, getStorages } from "@/lib/erp/lookups";
 import { monthStart, todayRiyadh } from "@/lib/i18n/format";
-import { getLocale } from "@/lib/i18n/server";
+import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { publicStorageUrl } from "@/lib/supabase/urls";
 import { createClient } from "@/lib/supabase/server";
 import { PosScreen, type PosProduct } from "./pos-screen";
@@ -23,15 +23,17 @@ export default async function PosPage() {
   const today = todayRiyadh();
   // "my" figures: RLS limits a salesman to his own invoices
   const mine = supabase.from("sales").select("total, returned_total, sale_date").eq("status", "posted").gte("sale_date", monthStart(today));
-  const [{ data: overview }, customers, storages, accounts, methods, settings, fx, { data: month }] = await Promise.all([
+  const [{ data: overview }, customers, drivers, storages, accounts, methods, settings, fx, { data: month }, dict] = await Promise.all([
     supabase.rpc("stock_overview"),
     getCustomers(),
+    getDrivers(),
     getStorages(),
     getMoneyAccounts(),
     getPaymentMethods(),
     getSettings(),
     getRates(),
     session.can("sales.view_all") ? mine.eq("created_by", session.userId) : mine,
+    getDictionary(locale),
   ]);
   const rows = (month ?? []) as { total: number; returned_total: number; sale_date: string }[];
   const net = (r: (typeof rows)[number]) => Number(r.total) - Number(r.returned_total);
@@ -63,6 +65,14 @@ export default async function PosPage() {
         sub: c.phone ?? c.code,
         keywords: [c.code, c.phone ?? "", c.name, c.name_ar ?? ""],
         email: c.email,
+        driver_id: c.driver_id,
+      }))}
+      drivers={drivers.map((d) => ({
+        value: d.id,
+        label: (ar ? d.name_ar || d.name : d.name) ?? "",
+        sub: `${dict.erp.driverKinds[d.kind as "driver"] ?? d.kind} · ${d.code}`,
+        keywords: [d.code, d.name, d.name_ar ?? "", d.vehicle_no ?? ""],
+        commission: d.commission_type,
       }))}
       defaultCustomer={walkIn?.id ?? null}
       storages={storages}

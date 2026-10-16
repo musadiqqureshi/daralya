@@ -35,7 +35,8 @@ export type PosProduct = {
   image: string | null;
 };
 type Named = { id: string; name_en: string; name_ar: string };
-type Customer = Option & { email: string | null };
+type Customer = Option & { email: string | null; driver_id?: string | null };
+type Driver = Option & { commission: string };
 type Mode = "retail" | "wholesale" | "custom";
 type Line = { id: string; qty: string; mode: Mode; custom: string };
 
@@ -64,6 +65,7 @@ function printSlip(id: string) {
 export function PosScreen({
   products,
   customers: initialCustomers,
+  drivers,
   defaultCustomer,
   storages,
   accounts,
@@ -77,6 +79,8 @@ export function PosScreen({
 }: {
   products: PosProduct[];
   customers: Customer[];
+  /** drivers and agents who earn commission on customers they refer */
+  drivers: Driver[];
   defaultCustomer: string | null;
   storages: Named[];
   accounts: (Named & { kind: "cash" | "bank" })[];
@@ -103,7 +107,14 @@ export function PosScreen({
   const [lines, setLines] = useState<Line[]>([]);
   const [open, setOpen] = useState(false);
   const [customers, setCustomers] = useState(initialCustomers);
-  const [customer, setCustomer] = useState<string | null>(defaultCustomer);
+  const [customer, setCustomerId] = useState<string | null>(defaultCustomer);
+  const driverOf = (id: string | null) => initialCustomers.find((c) => c.value === id)?.driver_id ?? null;
+  const [driver, setDriver] = useState<string | null>(() => driverOf(defaultCustomer));
+  // a customer linked to a driver/agent brings the referral with them; it can still be changed
+  const setCustomer = (id: string | null) => {
+    setCustomerId(id);
+    setDriver(customers.find((c) => c.value === id)?.driver_id ?? null);
+  };
   const [customerEmail, setCustomerEmail] = useState("");
   const [currency, setCurrency] = useState<Currency>("SAR");
   const [paidNow, setPaidNow] = useState(canCollect);
@@ -220,6 +231,7 @@ export function PosScreen({
           currency,
           customer_email: cust && !cust.email ? customerEmail : "",
           storage_id: storage,
+          driver_id: driver,
           date: todayRiyadh(),
           lines: lines.map((l) => ({ product_id: l.id, qty: qtyOf(l), unit_price: priceOf(l), discount_amount: 0 })),
           payment: canCollect && paidNow && totalSar > 0 ? { amount: totalSar, method_id: payMethod, money_account_id: payAccount, reference: null } : null,
@@ -551,6 +563,16 @@ export function PosScreen({
                   )}
                 </div>
               </Field>
+              {drivers.length > 0 && (
+                <Field label={t.referredBy} className="sm:col-span-2">
+                  <EntitySelect className="h-10" options={drivers} value={driver} onChange={setDriver} clearable placeholder={t.noReferral} />
+                  {driver && (
+                    <p className="mt-1 text-xs text-palm-800">
+                      {tpl(t.commissionTo, { name: drivers.find((d) => d.value === driver)?.label ?? "" })} · {dict.erp.commissionTypes[(drivers.find((d) => d.value === driver)?.commission ?? "none") as "none"]}
+                    </p>
+                  )}
+                </Field>
+              )}
               {cust && !cust.email && (
                 <Field label={dict.erp.sales.customerEmail} htmlFor="pos-email">
                   <Input id="pos-email" type="email" dir="ltr" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="name@example.com" />

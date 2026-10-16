@@ -283,6 +283,9 @@ export const erpAr: ErpDict = {
     left: "متبقٍ {qty}",
     paid: "مدفوع الآن",
     onCredit: "آجل",
+    referredBy: "بإحالة من سائق / مندوب",
+    noReferral: "بدون إحالة (بيع مباشر)",
+    commissionTo: "العمولة لـ {name}",
   },
   customers: {
     title: "العملاء",

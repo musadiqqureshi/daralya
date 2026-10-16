@@ -281,6 +281,9 @@ export const erpEn = {
     left: "{qty} left",
     paid: "Paid now",
     onCredit: "On credit",
+    referredBy: "Referred by driver / agent",
+    noReferral: "No referral (direct sale)",
+    commissionTo: "Commission goes to {name}",
   },
   customers: {
     title: "Customers",
